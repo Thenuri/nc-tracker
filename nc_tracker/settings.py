@@ -33,6 +33,13 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 # enables the "Who am I?" role switcher. Must be False in production.
 PROTOTYPE_MODE = env("PROTOTYPE_MODE")
 
+# HTTPS protection. Off on the laptop (DEBUG=True), on by default in production.
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+# Set to e.g. 31536000 once the server is confirmed to work over HTTPS only.
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0)
+
 
 # --- Applications ---------------------------------------------------------
 
