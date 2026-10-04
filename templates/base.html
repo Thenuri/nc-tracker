@@ -1,0 +1,63 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NC Tracker{% endblock %} · APIIT</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="{% static 'css/app.css' %}" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+
+  {% if PROTOTYPE_MODE %}
+    {# Shown only when PROTOTYPE_MODE=True in .env, so nobody mistakes sample data for real NCs #}
+    <div class="prototype-banner text-center py-1 small fw-semibold" role="alert">
+      PROTOTYPE – sample data
+    </div>
+  {% endif %}
+
+  <nav class="navbar navbar-expand-md navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">NC Tracker – APIIT</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+              aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">Home</a></li>
+          {% block nav_links %}{% endblock %}
+        </ul>
+        <div class="navbar-nav">
+          {# Phase 3: "Who am I?" role switcher goes here (prototype only) #}
+          {% block nav_user %}{% endblock %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4 flex-grow-1">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-top bg-white py-3 mt-auto">
+    <div class="container small text-muted">
+      APIIT Sri Lanka · Non-Conformity Tracker
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,14 @@
+/* Small additions on top of Bootstrap. Keep this file short. */
+
+/* Prototype banner: amber so it stands out but isn't mistaken for an error */
+.prototype-banner {
+  background-color: #ffc107;
+  color: #212529;
+  letter-spacing: 0.03em;
+}
+
+/* Status colours (UI-04), used from Phase 6 onwards:
+   red = overdue, amber = due within 7 days, green = on track or closed */
+.status-overdue  { background-color: #dc3545; color: #fff; }
+.status-due-soon { background-color: #ffc107; color: #212529; }
+.status-on-track { background-color: #198754; color: #fff; }
