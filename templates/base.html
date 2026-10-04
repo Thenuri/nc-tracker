@@ -29,9 +29,35 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">Home</a></li>
           {% block nav_links %}{% endblock %}
         </ul>
-        <div class="navbar-nav">
-          {# Phase 3: "Who am I?" role switcher goes here (prototype only) #}
-          {% block nav_user %}{% endblock %}
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 py-2 py-md-0">
+          {% if PROTOTYPE_MODE %}
+            {# PROTOTYPE STAND-IN: replaced by Microsoft login later #}
+            <form method="post" action="{% url 'accounts:switch_user' %}" class="d-flex align-items-center gap-2">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <label for="whoami" class="text-white-50 small text-nowrap mb-0">Who am I?</label>
+              <select id="whoami" name="user_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">— choose a person —</option>
+                {% regroup switcher_users by get_role_display as role_groups %}
+                {% for group in role_groups %}
+                  <optgroup label="{{ group.grouper }}">
+                    {% for u in group.list %}
+                      <option value="{{ u.pk }}" {% if u.pk == user.pk %}selected{% endif %}>
+                        {{ u }}{% if u.is_delegate %} (delegate){% endif %}{% if u.department %} – {{ u.department }}{% endif %}
+                      </option>
+                    {% endfor %}
+                  </optgroup>
+                {% endfor %}
+              </select>
+              <noscript><button class="btn btn-sm btn-light">Go</button></noscript>
+            </form>
+          {% endif %}
+          {% if user.is_authenticated %}
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-light text-nowrap">Log out</button>
+            </form>
+          {% endif %}
         </div>
       </div>
     </div>

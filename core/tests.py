@@ -1,5 +1,13 @@
+from io import StringIO
+
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
+
+from accounts.models import User
+from ncs.models import NC
+
+from .models import Department
 
 BANNER_TEXT = "PROTOTYPE – sample data"
 
@@ -20,3 +28,33 @@ class HomePageTests(TestCase):
         # Real users must never see the prototype banner in production.
         response = self.client.get(reverse("core:home"))
         self.assertNotContains(response, BANNER_TEXT)
+
+
+@override_settings(PROTOTYPE_MODE=True)
+class SampleDataTests(TestCase):
+    def load(self):
+        call_command("load_sample_data", stdout=StringIO())
+
+    def test_creates_departments_with_hods_and_ncs_in_every_status(self):
+        self.load()
+        self.assertEqual(Department.objects.count(), 8)
+        self.assertFalse(Department.objects.filter(hod__isnull=True).exists())
+        self.assertGreaterEqual(NC.objects.count(), 20)
+        statuses = set(NC.objects.values_list("status", flat=True))
+        self.assertEqual(statuses, set(NC.Status.values))
+
+    def test_includes_cross_department_disputes(self):
+        self.load()
+        disputed = NC.objects.filter(status=NC.Status.DISPUTED)
+        self.assertTrue(any(nc.raising_department_id != nc.receiving_department_id for nc in disputed))
+
+    def test_running_twice_does_not_duplicate(self):
+        self.load()
+        counts = (NC.objects.count(), User.objects.count())
+        self.load()
+        self.assertEqual((NC.objects.count(), User.objects.count()), counts)
+
+    @override_settings(PROTOTYPE_MODE=False)
+    def test_refuses_outside_prototype_mode(self):
+        call_command("load_sample_data", stdout=StringIO(), stderr=StringIO())
+        self.assertEqual(NC.objects.count(), 0)

@@ -8,11 +8,31 @@
     <div class="card shadow-sm">
       <div class="card-body p-4">
         <h1 class="h3 mb-3">Welcome to the NC Tracker</h1>
-        <p class="mb-2">
+        <p>
           This is where APIIT records, validates, tracks and closes non-conformities (NCs)
           across all departments.
         </p>
-        <p class="text-muted mb-0">
+
+        {% if user.is_authenticated %}
+          <div class="alert alert-info mb-0">
+            You are signed in as <strong>{{ user }}</strong>
+            ({{ user.get_role_display }}{% if user.is_delegate %}, delegate{% endif %}{% if user.department %}, {{ user.department }}{% endif %}).
+            {% if headed_departments %}
+              <br>You are Head of: {{ headed_departments|join:", " }}.
+            {% endif %}
+            {% if user.is_staff %}
+              <br><a href="{% url 'admin:index' %}">Manage lists (departments, processes, sources)</a>
+            {% endif %}
+          </div>
+        {% elif PROTOTYPE_MODE %}
+          <div class="alert alert-warning mb-0">
+            Pick a person from <strong>Who am I?</strong> at the top to try the app as that role.
+          </div>
+        {% else %}
+          <div class="alert alert-warning mb-0">Please sign in to continue.</div>
+        {% endif %}
+
+        <p class="text-muted mt-3 mb-0">
           The register, dashboard and NC forms will appear here in the next phases.
         </p>
       </div>

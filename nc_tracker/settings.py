@@ -79,6 +79,8 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 # Makes PROTOTYPE_MODE available in every template
                 "core.context_processors.prototype_mode",
+                # Users for the "Who am I?" switcher (prototype only)
+                "accounts.context_processors.role_switcher",
             ],
         },
     },
@@ -102,6 +104,8 @@ DATABASES = {
 # department fields later (Phase 2) without rebuilding the database.
 AUTH_USER_MODEL = "accounts.User"
 
+LOGOUT_REDIRECT_URL = "/"
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -121,6 +125,19 @@ EMAIL_PORT = env.int("EMAIL_PORT", default=25)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+
+
+# --- NC rules still marked [TBC] in the SRS ---------------------------------
+# Defaults agreed in CLAUDE.md; change them in .env without touching code.
+
+# FR-14: days (Mon–Fri) the receiving HoD has to validate a new NC
+NC_VALIDATION_WORKING_DAYS = env.int("NC_VALIDATION_WORKING_DAYS", default=3)
+# FR-26: remind the Action Owner this many days before the target date
+NC_REMINDER_DAYS_BEFORE_TARGET = env.int("NC_REMINDER_DAYS_BEFORE_TARGET", default=7)
+# FR-27: tell the NC Manager when an NC is this many days overdue
+NC_ESCALATION_DAYS_OVERDUE = env.int("NC_ESCALATION_DAYS_OVERDUE", default=14)
+# SRS 3.1: NCs within one department still need validation
+NC_SAME_DEPARTMENT_NEEDS_VALIDATION = env.bool("NC_SAME_DEPARTMENT_NEEDS_VALIDATION", default=True)
 
 
 # --- Language and time ----------------------------------------------------
