@@ -1,4 +1,4 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -9,7 +9,7 @@
     body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff;
            max-width: 800px; margin: 16px auto; padding: 0 16px; }
     h1 { font-size: 18pt; margin: 0 0 4px; }
-    h2 { font-size: 12pt; border-bottom: 1px solid #000; padding-bottom: 2px; margin: 18px 0 6px; }
+    h2 { font-size: 12pt; border-bottom: 2px solid #076d67; color: #076d67; padding-bottom: 2px; margin: 18px 0 6px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; vertical-align: top; padding: 3px 6px; border: 1px solid #999; }
     th { width: 30%; background: #f0f0f0; }
@@ -21,6 +21,7 @@
 <body>
   <div class="no-print"><button onclick="window.print()">Print / save as PDF</button></div>
 
+  <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT" style="height: 36px; margin-bottom: 8px">
   <h1>Non-conformity record: {{ nc.nc_id }}</h1>
   <div class="muted">APIIT Sri Lanka · NC Tracker · printed {{ printed_at|date:"j M Y H:i" }} by {{ request.user }}</div>
   {% if PROTOTYPE_MODE %}<p><strong>PROTOTYPE – sample data</strong></p>{% endif %}

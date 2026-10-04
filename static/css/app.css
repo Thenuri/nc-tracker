@@ -1,34 +1,190 @@
-/* Small additions on top of Bootstrap. Keep this file short. */
+/* NC Tracker theme: Bootstrap 5 recoloured with the APIIT brand.
+   Colours were sampled from the APIIT LMS sign-in page. Keep this file short:
+   change a colour here and it changes everywhere. */
 
-/* Prototype banner: amber so it stands out but isn't mistaken for an error */
-.prototype-banner {
-  background-color: #ffc107;
-  color: #212529;
-  letter-spacing: 0.03em;
+:root {
+  /* APIIT brand */
+  --apiit-teal: #00b2a7;        /* header / accents */
+  --apiit-teal-deep: #076d67;   /* buttons, links (6:1 on white – readable) */
+  --apiit-teal-darker: #055752; /* hover */
+  --apiit-slate: #5c8786;       /* gradient band */
+  --apiit-red: #ed1c24;         /* logo dots – used for danger */
+  --apiit-ink: #1c2b2a;
+  --apiit-bg: #f3f7f7;
+  --apiit-line: #dfe9e8;
+
+  /* Bootstrap mapped to the brand */
+  --bs-primary: var(--apiit-teal-deep);
+  --bs-primary-rgb: 7, 109, 103;
+  --bs-danger: #d01a21;
+  --bs-danger-rgb: 208, 26, 33;
+  --bs-info-rgb: 155, 226, 221;            /* soft teal for "pending" badges */
+  --bs-link-color: var(--apiit-teal-deep);
+  --bs-link-color-rgb: 7, 109, 103;
+  --bs-link-hover-color: var(--apiit-teal-darker);
+  --bs-link-hover-color-rgb: 5, 87, 82;
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bs-body-color: var(--apiit-ink);
+  --bs-body-bg: var(--apiit-bg);
+  --bs-border-color: var(--apiit-line);
+  --bs-border-radius: 0.6rem;
+  --bs-card-border-radius: 0.9rem;
+  --bs-focus-ring-color: rgba(0, 178, 167, 0.3);
+}
+
+body { background: var(--apiit-bg); }
+h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.01em; }
+
+/* --- Buttons --------------------------------------------------------------- */
+.btn { font-weight: 500; }
+.btn-primary {
+  --bs-btn-bg: var(--apiit-teal-deep);
+  --bs-btn-border-color: var(--apiit-teal-deep);
+  --bs-btn-hover-bg: var(--apiit-teal-darker);
+  --bs-btn-hover-border-color: var(--apiit-teal-darker);
+  --bs-btn-active-bg: var(--apiit-teal-darker);
+  --bs-btn-active-border-color: var(--apiit-teal-darker);
+  --bs-btn-disabled-bg: var(--apiit-teal-deep);
+  --bs-btn-disabled-border-color: var(--apiit-teal-deep);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--apiit-teal-deep);
+  --bs-btn-border-color: var(--apiit-teal-deep);
+  --bs-btn-hover-bg: var(--apiit-teal-deep);
+  --bs-btn-hover-border-color: var(--apiit-teal-deep);
+  --bs-btn-active-bg: var(--apiit-teal-darker);
+  --bs-btn-active-border-color: var(--apiit-teal-darker);
+}
+.form-control:focus, .form-select:focus, .form-check-input:focus {
+  border-color: var(--apiit-teal);
+  box-shadow: 0 0 0 0.2rem rgba(0, 178, 167, 0.25);
+}
+.form-check-input:checked { background-color: var(--apiit-teal-deep); border-color: var(--apiit-teal-deep); }
+
+/* --- Prototype banner --------------------------------------------------------- */
+.prototype-banner { background: #ffc107; color: #212529; letter-spacing: 0.04em; }
+
+/* --- Navbar: white with the logo, teal underline like the LMS header --------- */
+.app-navbar {
+  background: #fff;
+  border-bottom: 3px solid var(--apiit-teal);
+  box-shadow: 0 2px 12px rgba(7, 109, 103, 0.06);
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+.brand-logo { height: 34px; width: auto; }
+.brand-divider { width: 1px; height: 28px; background: var(--apiit-line); }
+.brand-name { font-weight: 700; color: var(--apiit-teal-deep); font-size: 1.05rem; }
+.app-navbar .nav-link {
+  color: #4a5a59;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem !important;
+}
+.app-navbar .nav-link:hover { color: var(--apiit-teal-deep); background: rgba(0, 178, 167, 0.08); }
+.app-navbar .nav-link.active { color: var(--apiit-teal-deep); background: rgba(0, 178, 167, 0.12); }
+.switcher-label { color: #6b7a79; }
+.app-navbar .nav-link { white-space: nowrap; }
+.app-navbar .form-select { width: 14rem; }
+@media (max-width: 1199.98px) { .app-navbar .form-select { width: 100%; } }
+/* Medium-wide screens: hide the "Who am I?" text visually (screen readers still
+   read it) so the navbar fits on one line. */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  .app-navbar .switcher-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .app-navbar .form-select { width: 12.5rem; }
+}
+
+/* Links: no underline until hovered – cleaner in tables and lists */
+a { text-decoration: none; }
+a:not(.btn):hover { text-decoration: underline; text-underline-offset: 3px; }
+.list-group-item-action:hover, .nav-link:hover, .navbar-brand:hover, .stat-tile:hover { text-decoration: none !important; }
+
+/* --- Footer: deep teal band ---------------------------------------------------- */
+.app-footer {
+  background: linear-gradient(90deg, var(--apiit-teal-deep), var(--apiit-slate));
+  color: #fff;
+  padding: 0.9rem 0;
+}
+
+/* --- Cards ------------------------------------------------------------------- */
+.card {
+  border: 1px solid var(--apiit-line);
+  border-radius: var(--bs-card-border-radius);
+  box-shadow: 0 1px 2px rgba(28, 43, 42, 0.04), 0 4px 16px rgba(28, 43, 42, 0.04);
+}
+.card.shadow-sm { box-shadow: 0 1px 2px rgba(28, 43, 42, 0.04), 0 4px 16px rgba(28, 43, 42, 0.04) !important; }
+.card-header { background: #fff; border-bottom-color: var(--apiit-line); padding: 0.85rem 1.1rem; }
+.card-header:first-child { border-radius: var(--bs-card-border-radius) var(--bs-card-border-radius) 0 0; }
+details.card > summary.card-header { border-bottom: 0; }
+details.card[open] > summary.card-header { border-bottom: 1px solid var(--apiit-line); }
+.list-group-item-action:hover { background: rgba(0, 178, 167, 0.05); }
+.nc-id { color: var(--apiit-teal-deep); }
+.empty-check {
+  width: 3rem; height: 3rem; line-height: 3rem; margin: 0 auto; border-radius: 50%;
+  background: rgba(0, 178, 167, 0.12); color: var(--apiit-teal-deep); font-size: 1.4rem; font-weight: 700;
+}
+
+/* --- Tables -------------------------------------------------------------------- */
+.table > thead.table-light > tr > th {
+  background: #eef5f4; color: #4a5a59; font-weight: 600; font-size: 0.78rem;
+  text-transform: uppercase; letter-spacing: 0.03em; border-bottom-color: var(--apiit-line);
 }
 
 /* Register rows: thin left edge in the UI-04 colour
    (red = overdue, amber = due within 7 days, green = on track or closed) */
-tr.rag-red    > td:first-child { box-shadow: inset 4px 0 0 #dc3545; }
+tr.rag-red    > td:first-child { box-shadow: inset 4px 0 0 #d01a21; }
 tr.rag-amber  > td:first-child { box-shadow: inset 4px 0 0 #ffc107; }
 tr.rag-green  > td:first-child { box-shadow: inset 4px 0 0 #198754; }
 tr.rag-grey   > td:first-child { box-shadow: inset 4px 0 0 #adb5bd; }
 
-/* Dashboard stat tiles */
-.stat-tile { color: #212529; border-color: rgba(11, 11, 11, 0.10); }
-a.stat-tile:hover { background-color: #f8f9fa; }
-.stat-tile .stat-label { color: #52514e; }
-.stat-tile .stat-value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
-.stat-tile.tile-critical { border-color: #d03b3b; }
+/* --- Badges ---------------------------------------------------------------------- */
+.badge { font-weight: 600; letter-spacing: 0.01em; }
+.badge.text-bg-info { color: #064e4a !important; }
+
+/* --- Welcome screen (signed out), styled after the LMS sign-in ---------------- */
+.welcome-hero {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.18), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(237, 28, 36, 0.10), transparent 35%),
+    linear-gradient(135deg, var(--apiit-teal-deep) 0%, var(--apiit-teal) 55%, var(--apiit-slate) 100%);
+}
+.welcome-card {
+  max-width: 26rem;
+  padding: 2.5rem 2rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 50px rgba(5, 87, 82, 0.35);
+}
+.welcome-logo { width: 13rem; max-width: 80%; height: auto; }
+.welcome-switcher { flex-direction: column; align-items: stretch !important; }
+.welcome-switcher .switcher-label { display: none; }
+.ms-logo { display: inline-grid; grid-template-columns: 8px 8px; gap: 2px; }
+.ms-logo i { width: 8px; height: 8px; display: block; }
+.ms-logo i:nth-child(1) { background: #f25022; }
+.ms-logo i:nth-child(2) { background: #7fba00; }
+.ms-logo i:nth-child(3) { background: #00a4ef; }
+.ms-logo i:nth-child(4) { background: #ffb900; }
+
+/* --- Dashboard stat tiles --------------------------------------------------------- */
+.stat-tile { color: var(--apiit-ink); border-left: 4px solid var(--apiit-teal) !important; }
+a.stat-tile:hover { background: rgba(0, 178, 167, 0.05); }
+.stat-tile .stat-label { color: #5b6b6a; }
+.stat-tile .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.stat-tile.tile-critical { border-left-color: #d01a21 !important; }
 .stat-tile.tile-critical .stat-value,
-.stat-tile.tile-critical .stat-label { color: #d03b3b; }
+.stat-tile.tile-critical .stat-label { color: #d01a21; }
 
 /* Chart colour tokens (validated with the dataviz palette checker) */
 .viz-root {
-  --series-1: #2a78d6;   /* blue  – NCs / Raised */
+  --series-1: #00968c;   /* APIIT teal – NCs / Raised */
   --series-2: #eb6834;   /* orange – Closed */
-  --viz-grid: #e1e0d9;
-  --viz-muted: #898781;
+  --viz-grid: #e3ebea;
+  --viz-muted: #7d8b8a;
   --viz-surface: #ffffff;
 }
 .chart-box { position: relative; width: 100%; }

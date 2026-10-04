@@ -1,4 +1,4 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -11,7 +11,7 @@
     .meta { color: #444; margin-bottom: 8px; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #999; padding: 3px 4px; text-align: left; vertical-align: top; }
-    th { background: #e9ecef; }
+    th { background: #076d67; color: #fff; }
     thead { display: table-header-group; }   /* repeat header on every page */
     tr { page-break-inside: avoid; }
     .overdue { color: #b02a37; font-weight: bold; }
@@ -28,6 +28,7 @@
     </div>
   {% endif %}
 
+  <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT" style="height: 30px; margin-top: 6px">
   <h1>{{ title }}{% if PROTOTYPE_MODE %} – PROTOTYPE, sample data{% endif %}</h1>
   <div class="meta">
     APIIT Sri Lanka · exported {{ exported_at|date:"j M Y H:i" }} by {{ request.user }} ·
