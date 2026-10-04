@@ -19,5 +19,6 @@ def navigation(request):
     return {
         "nav": {
             "can_log": perms.can_log_nc(user),
+            "unread": user.notifications.filter(read_at__isnull=True).count(),
         }
     }

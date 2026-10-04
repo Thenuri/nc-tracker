@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #000; background: #fff; margin: 0 8px; }
+    h1 { font-size: 14pt; margin: 8px 0 2px; }
+    .meta { color: #444; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #999; padding: 3px 4px; text-align: left; vertical-align: top; }
+    th { background: #e9ecef; }
+    thead { display: table-header-group; }   /* repeat header on every page */
+    tr { page-break-inside: avoid; }
+    .overdue { color: #b02a37; font-weight: bold; }
+    .notice { background: #fff3cd; border: 1px solid #ffc107; padding: 8px; margin: 8px 0; font-size: 10pt; }
+    @media print { .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  {% if pdf_fallback %}
+    <div class="notice no-print">
+      PDF creation isn't set up on this computer, so here is a print-ready page instead.
+      Use <strong>Print → Save as PDF</strong> (choose landscape).
+      <button onclick="window.print()">Print / save as PDF</button>
+    </div>
+  {% endif %}
+
+  <h1>{{ title }}{% if PROTOTYPE_MODE %} – PROTOTYPE, sample data{% endif %}</h1>
+  <div class="meta">
+    APIIT Sri Lanka · exported {{ exported_at|date:"j M Y H:i" }} by {{ request.user }} ·
+    {{ ncs|length }} NC{{ ncs|length|pluralize }} · {{ filters_text }}
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>NC ID</th><th>Status</th><th>Receiving</th><th>Raising</th><th>Area / process</th>
+        <th style="width: 30%">Description</th><th>Identified</th><th>Action Owner</th><th>Target</th><th>Days open</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for nc in ncs %}
+        <tr>
+          <td>{{ nc.nc_id }}</td>
+          <td>{{ nc.get_status_display }}{% if nc.is_overdue %}<br><span class="overdue">Overdue {{ nc.days_overdue }}d</span>{% endif %}</td>
+          <td>{{ nc.receiving_department }}</td>
+          <td>{{ nc.raising_department }}</td>
+          <td>{{ nc.process }}</td>
+          <td>{{ nc.description }}</td>
+          <td>{{ nc.date_identified|date:"j M Y" }}</td>
+          <td>{{ nc.action_owner|default:"—" }}</td>
+          <td>{{ nc.target_date|date:"j M Y"|default:"—" }}</td>
+          <td>{{ nc.days_open }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="10">No NCs match these filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

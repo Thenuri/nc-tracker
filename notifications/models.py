@@ -29,3 +29,18 @@ class Notification(models.Model):
     @property
     def is_read(self):
         return self.read_at is not None
+
+
+class ReminderLog(models.Model):
+    """Remembers which automatic reminders were already sent.
+
+    The daily reminder command checks this so it never sends the same
+    reminder twice, even if it runs more than once a day or misses a day.
+    `key` looks like "12:overdue:2026-10-01" (NC, reminder type, deadline).
+    """
+
+    key = models.CharField(max_length=100, unique=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.key

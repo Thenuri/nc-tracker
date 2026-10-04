@@ -1,10 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 
 from accounts import permissions as perms
 from ncs.queries import visible_ncs
 
+from . import exports
 from .filters import RegisterFilterForm, apply_filters
 from .stats import build_dashboard
 
@@ -36,6 +39,47 @@ def register(request):
         "filters_used": any(v for k, v in request.GET.items() if k != "page"),
     }
     return render(request, "dashboard/register.html", context)
+
+
+def describe_filters(form):
+    """'Status: Closed · Receiving dept: Finance' – printed on exports."""
+    if not form.is_bound or not form.is_valid():
+        return "No filters"
+    parts = []
+    for name, value in form.cleaned_data.items():
+        if value in (None, ""):
+            continue
+        field = form.fields[name]
+        if hasattr(field, "choices") and not hasattr(field, "queryset"):
+            value = dict(field.choices).get(value, value)
+        parts.append(f"{field.label}: {value}")
+    return " · ".join(parts) or "No filters"
+
+
+@login_required
+def export_excel(request):
+    """Filtered register as Excel (FR-36)."""
+    form, ncs = filtered_register(request)
+    content = exports.register_excel(ncs, f"NC register – {describe_filters(form)}")
+    response = HttpResponse(
+        content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="nc-register-{timezone.localdate():%Y%m%d}.xlsx"'
+    return response
+
+
+@login_required
+def export_pdf(request):
+    """Filtered register as PDF (FR-36). Falls back to a print-ready page if
+    WeasyPrint's system libraries aren't installed on this machine."""
+    form, ncs = filtered_register(request)
+    filters_text = describe_filters(form)
+    pdf = exports.register_pdf(request, ncs, "NC register", filters_text)
+    if pdf is None:
+        return HttpResponse(exports.register_html(request, ncs, "NC register", filters_text))
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="nc-register-{timezone.localdate():%Y%m%d}.pdf"'
+    return response
 
 
 @login_required

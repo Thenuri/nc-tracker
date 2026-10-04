@@ -59,6 +59,10 @@
             </form>
           {% endif %}
           {% if user.is_authenticated %}
+            <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-light text-nowrap position-relative">
+              Notifications
+              {% if nav.unread %}<span class="badge text-bg-danger ms-1">{{ nav.unread }}<span class="visually-hidden"> unread</span></span>{% endif %}
+            </a>
             <form method="post" action="{% url 'accounts:logout' %}">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-light text-nowrap">Log out</button>

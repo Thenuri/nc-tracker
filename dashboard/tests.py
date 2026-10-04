@@ -68,6 +68,50 @@ class RegisterTests(DashboardTestBase):
         self.assertContains(self.get(self.manager), "rag-red")
 
 
+class ExportTests(DashboardTestBase):
+    def test_excel_has_filtered_rows(self):  # FR-36
+        from io import BytesIO
+
+        from openpyxl import load_workbook
+
+        self.client.force_login(self.manager)
+        response = self.client.get(reverse("dashboard:export_excel"), {"status": "open"})
+        self.assertEqual(response["Content-Type"],
+                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        sheet = load_workbook(BytesIO(response.content)).active
+        self.assertEqual(sheet["A4"].value, "NC ID")
+        ids = {row[0] for row in sheet.iter_rows(min_row=5, values_only=True)}
+        self.assertEqual(ids, {self.nc.nc_id, self.overdue.nc_id})
+        self.assertIn("Status: All open", sheet["A1"].value)
+
+    def test_excel_respects_department_view(self):
+        from io import BytesIO
+
+        from openpyxl import load_workbook
+
+        self.client.force_login(self.hr_staff)
+        sheet = load_workbook(BytesIO(self.client.get(reverse("dashboard:export_excel")).content)).active
+        ids = {row[0] for row in sheet.iter_rows(min_row=5, values_only=True)}
+        self.assertEqual(ids, {self.closed.nc_id, self.not_valid.nc_id})
+
+    def test_pdf_or_printable_fallback(self):
+        from unittest import mock
+
+        from . import exports
+
+        self.client.force_login(self.manager)
+        with mock.patch.object(exports, "pdf_available", return_value=False):
+            response = self.client.get(reverse("dashboard:export_pdf"), {"status": "CLOSED"})
+        self.assertContains(response, "print-ready page")
+        self.assertContains(response, self.closed.nc_id)
+        self.assertNotContains(response, self.overdue.nc_id)
+
+        if exports.pdf_available():  # only on machines with WeasyPrint's libraries
+            response = self.client.get(reverse("dashboard:export_pdf"))
+            self.assertEqual(response["Content-Type"], "application/pdf")
+            self.assertTrue(response.content.startswith(b"%PDF"))
+
+
 class DashboardTests(DashboardTestBase):
     def test_counts(self):  # FR-33
         counts = build_dashboard(NC.objects.all())["counts"]

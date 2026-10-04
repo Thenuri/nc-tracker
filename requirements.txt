@@ -1,3 +1,7 @@
 Django>=5.2,<5.3
 django-environ>=0.14,<0.15
 django-simple-history>=3.10,<4
+openpyxl>=3.1,<4
+# PDF export. Works out of the box on Linux; on Windows it also needs the
+# GTK/Pango libraries (see README). Without them the app offers a printable page.
+weasyprint>=66

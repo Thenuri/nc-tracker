@@ -11,7 +11,11 @@
       {% if sees_everything %}All departments{% else %}NCs for your department{% endif %} · {{ total }} NC{{ total|pluralize }}
     </div>
   </div>
-  {% block export_buttons %}{% endblock %}
+  {# FR-36: exports contain exactly the filtered rows shown here #}
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-outline-success" href="{% url 'dashboard:export_excel' %}?{{ querystring }}">Export Excel</a>
+    <a class="btn btn-sm btn-outline-danger" href="{% url 'dashboard:export_pdf' %}?{{ querystring }}">Export PDF</a>
+  </div>
 </div>
 
 {# FR-32 filters – plain GET form, so a filtered view can be bookmarked or shared #}
