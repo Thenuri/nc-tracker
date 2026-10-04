@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Not allowed{% endblock %}
+{% block content %}
+<div class="alert alert-warning">
+  <h1 class="h4">You can't do that</h1>
+  <p class="mb-0">Your role doesn't allow this action or page. <a href="{% url 'core:home' %}">Back to home</a></p>
+</div>
+{% endblock %}

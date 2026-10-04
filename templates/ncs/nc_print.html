@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ nc.nc_id }} – NC record</title>
+  <style>
+    /* Plain, printer-friendly layout: no Bootstrap, no colours needed */
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; background: #fff;
+           max-width: 800px; margin: 16px auto; padding: 0 16px; }
+    h1 { font-size: 18pt; margin: 0 0 4px; }
+    h2 { font-size: 12pt; border-bottom: 1px solid #000; padding-bottom: 2px; margin: 18px 0 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; vertical-align: top; padding: 3px 6px; border: 1px solid #999; }
+    th { width: 30%; background: #f0f0f0; }
+    .muted { color: #555; font-size: 9pt; }
+    .no-print { margin-bottom: 12px; }
+    @media print { .no-print { display: none; } body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="no-print"><button onclick="window.print()">Print / save as PDF</button></div>
+
+  <h1>Non-conformity record: {{ nc.nc_id }}</h1>
+  <div class="muted">APIIT Sri Lanka · NC Tracker · printed {{ printed_at|date:"j M Y H:i" }} by {{ request.user }}</div>
+  {% if PROTOTYPE_MODE %}<p><strong>PROTOTYPE – sample data</strong></p>{% endif %}
+
+  <h2>Part A – Logging</h2>
+  <table>
+    <tr><th>Status</th><td>{{ nc.get_status_display }}{% if nc.is_overdue %} (overdue {{ nc.days_overdue }} days){% endif %}</td></tr>
+    <tr><th>Raising department</th><td>{{ nc.raising_department }}</td></tr>
+    <tr><th>Receiving department</th><td>{{ nc.receiving_department }}</td></tr>
+    <tr><th>Area / process</th><td>{{ nc.process }}{% if nc.process_other %} – {{ nc.process_other }}{% endif %}</td></tr>
+    <tr><th>Description</th><td>{{ nc.description|linebreaksbr }}</td></tr>
+    <tr><th>Date identified</th><td>{{ nc.date_identified|date:"j M Y" }}</td></tr>
+    <tr><th>Source</th><td>{{ nc.source }}{% if nc.source_other %} – {{ nc.source_other }}{% endif %}</td></tr>
+    <tr><th>Identified by</th><td>{{ nc.identified_by }}</td></tr>
+    <tr><th>Logged by / date</th><td>{{ nc.logged_by }}, {{ nc.logged_at|date:"j M Y H:i" }}</td></tr>
+    <tr><th>Severity</th><td>{{ nc.get_severity_display|default:"—" }}</td></tr>
+    <tr><th>Attachment</th><td>{% if nc.attachment %}Yes{% else %}None{% endif %}</td></tr>
+  </table>
+
+  <h2>Part B – Validation</h2>
+  <table>
+    <tr><th>Validation deadline</th><td>{{ nc.validation_deadline|date:"j M Y"|default:"—" }}</td></tr>
+    <tr><th>Decision</th><td>
+      {% if nc.dispute_reason %}Not valid (disputed){% elif nc.validated_by %}Valid{% else %}Not yet validated{% endif %}
+    </td></tr>
+    <tr><th>Reason (if not valid)</th><td>{{ nc.dispute_reason|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>Validated by / date</th><td>{% if nc.validated_by %}{{ nc.validated_by }}, {{ nc.validated_at|date:"j M Y" }}{% else %}—{% endif %}</td></tr>
+    {% if nc.dispute_decided_by %}
+      <tr><th>Dispute decision</th><td>{% if nc.status == "NOT_VALID" %}Upheld (not valid){% else %}Overturned (valid){% endif %}
+        – {{ nc.dispute_decided_by }}, {{ nc.dispute_decided_at|date:"j M Y" }}</td></tr>
+      <tr><th>Rationale</th><td>{{ nc.dispute_rationale|linebreaksbr }}</td></tr>
+    {% endif %}
+  </table>
+
+  <h2>Part C – Action planning</h2>
+  <table>
+    <tr><th>Root cause</th><td>{{ nc.root_cause|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>Corrective action</th><td>{{ nc.corrective_action|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>Action Owner</th><td>{{ nc.action_owner|default:"—" }}</td></tr>
+    <tr><th>Target date</th><td>{{ nc.target_date|date:"j M Y"|default:"—" }}
+      {% if nc.original_target_date and nc.original_target_date != nc.target_date %}(original {{ nc.original_target_date|date:"j M Y" }}){% endif %}</td></tr>
+  </table>
+  {% if date_changes %}
+    <p class="muted">Target date changes:</p>
+    <table>
+      {% for c in date_changes %}
+        <tr><td>{{ c.changed_at|date:"j M Y" }}</td><td>{{ c.old_date|date:"j M Y" }} → {{ c.new_date|date:"j M Y" }}</td>
+            <td>{{ c.reason }}</td><td>{{ c.changed_by }}</td></tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  <h2>Part D – Completion and closure</h2>
+  <table>
+    <tr><th>Date action completed</th><td>{{ nc.completion_date|date:"j M Y"|default:"—" }}</td></tr>
+    <tr><th>Evidence</th><td>
+      {% for e in evidence %}
+        <div>{{ e.description }}{% if e.link %} – {{ e.link }}{% endif %}{% if e.file %} (file attached){% endif %}
+          <span class="muted">· {{ e.uploaded_by }}, {{ e.uploaded_at|date:"j M Y" }}</span></div>
+      {% empty %}—{% endfor %}
+    </td></tr>
+    <tr><th>Verification outcome</th><td>{{ nc.get_verification_outcome_display|default:"—" }}</td></tr>
+    <tr><th>Verification comments</th><td>{{ nc.verification_comments|default:"—"|linebreaksbr }}</td></tr>
+    <tr><th>Verified by / date</th><td>{% if nc.verified_by %}{{ nc.verified_by }}, {{ nc.verified_at|date:"j M Y" }}{% else %}—{% endif %}</td></tr>
+    <tr><th>Closure date</th><td>{{ nc.closed_at|date:"j M Y"|default:"—" }}</td></tr>
+    <tr><th>Days open</th><td>{{ nc.days_open }}</td></tr>
+  </table>
+
+  {% if notes %}
+    <h2>Progress notes</h2>
+    <table>
+      {% for n in notes %}<tr><td style="width:25%">{{ n.created_at|date:"j M Y" }}<br><span class="muted">{{ n.author }}</span></td><td>{{ n.text|linebreaksbr }}</td></tr>{% endfor %}
+    </table>
+  {% endif %}
+
+  <h2>Change history</h2>
+  <table>
+    {% for r in history %}
+      <tr><td style="width:25%">{{ r.history_date|date:"j M Y H:i" }}</td>
+          <td>{{ r.history_change_reason|default:r.get_history_type_display }}</td>
+          <td>{{ r.get_status_display }}</td>
+          <td>{{ r.history_user|default:"System" }}</td></tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

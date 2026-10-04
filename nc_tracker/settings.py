@@ -79,6 +79,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 # Makes PROTOTYPE_MODE available in every template
                 "core.context_processors.prototype_mode",
+                "core.context_processors.navigation",
                 # Users for the "Who am I?" switcher (prototype only)
                 "accounts.context_processors.role_switcher",
             ],
@@ -104,6 +105,9 @@ DATABASES = {
 # department fields later (Phase 2) without rebuilding the database.
 AUTH_USER_MODEL = "accounts.User"
 
+# Prototype: the home page is where you pick "Who am I?". Later this becomes
+# the Microsoft sign-in URL.
+LOGIN_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -117,6 +121,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # --- Email ----------------------------------------------------------------
 # Prototype: console backend prints emails in the terminal.
 # Later: switch EMAIL_BACKEND / EMAIL_* in .env to send from nctracker@apiit.lk.
+
+# Full address of the site, used for links in emails (UI-03).
+SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000").rstrip("/")
 
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="nctracker@apiit.lk")

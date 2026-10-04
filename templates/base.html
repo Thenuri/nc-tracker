@@ -26,8 +26,10 @@
       </button>
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">Home</a></li>
-          {% block nav_links %}{% endblock %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">My tasks</a></li>
+          {% if nav.can_log %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'ncs:log' %}">Log an NC</a></li>
+          {% endif %}
         </ul>
         <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 py-2 py-md-0">
           {% if PROTOTYPE_MODE %}

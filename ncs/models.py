@@ -7,7 +7,8 @@ here: `status` is not editable and only ncs/workflow.py (Phase 4) changes it.
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, Q
+from django.urls import reverse
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
@@ -22,6 +23,18 @@ class NCQuerySet(models.QuerySet):
     def delete(self):
         # FR-43: blocks bulk deletes such as NC.objects.all().delete()
         raise PermissionError("NCs cannot be deleted. Record invalid NCs as Not Valid instead (FR-43).")
+
+    def open(self):
+        """Still being worked on. Not Valid is excluded from open counts (FR-15)."""
+        return self.exclude(status__in=[NC.Status.CLOSED, NC.Status.NOT_VALID])
+
+    def overdue(self, today=None):
+        """Same rule as NC.is_overdue, but as a database filter (FR-25)."""
+        today = today or timezone.localdate()
+        return self.filter(
+            Q(status=NC.Status.PENDING_VALIDATION, validation_deadline__lt=today)
+            | Q(status__in=NC.ACTION_STATUSES, target_date__lt=today)
+        )
 
 
 class NC(models.Model):
@@ -41,6 +54,13 @@ class NC(models.Model):
     class Outcome(models.TextChoices):
         EFFECTIVE = "EFFECTIVE", "Effective"
         NOT_EFFECTIVE = "NOT_EFFECTIVE", "Not effective"
+
+    # Statuses where the receiving department is still working towards the
+    # target date. Once sent for verification the action is complete, so the
+    # target date no longer makes the NC overdue.
+    ACTION_STATUSES = (Status.VALID, Status.IN_PROGRESS)
+    # UI-04: amber when the target date is this close
+    DUE_SOON_DAYS = 7
 
     # --- NC ID (A1, FR-03) ---------------------------------------------------
     # Stored as year + sequence so numbering is reliable past 999 a year;
@@ -165,11 +185,60 @@ class NC(models.Model):
     def delete(self, *args, **kwargs):
         raise PermissionError("NCs cannot be deleted. Record invalid NCs as Not Valid instead (FR-43).")
 
+    def get_absolute_url(self):
+        return reverse("ncs:detail", args=[self.nc_id])
+
     @property
     def days_open(self):
         """Days from logging until closure (or until today if still open)."""
         end = self.closed_at or timezone.now()
         return (timezone.localdate(end) - timezone.localdate(self.logged_at)).days
+
+    @property
+    def is_open(self):
+        return self.status not in (self.Status.CLOSED, self.Status.NOT_VALID)
+
+    @property
+    def overdue_since(self):
+        """The deadline that has been missed, or None if not overdue (FR-25).
+
+        OVERDUE is a computed flag, never a status (see CLAUDE.md).
+        """
+        today = timezone.localdate()
+        if self.status == self.Status.PENDING_VALIDATION:
+            deadline = self.validation_deadline
+        elif self.status in self.ACTION_STATUSES:
+            deadline = self.target_date
+        else:
+            return None
+        return deadline if deadline and deadline < today else None
+
+    @property
+    def is_overdue(self):
+        return self.overdue_since is not None
+
+    @property
+    def days_overdue(self):
+        since = self.overdue_since
+        return (timezone.localdate() - since).days if since else 0
+
+    @property
+    def is_due_soon(self):
+        if self.status not in self.ACTION_STATUSES or not self.target_date:
+            return False
+        days_left = (self.target_date - timezone.localdate()).days
+        return 0 <= days_left <= self.DUE_SOON_DAYS
+
+    @property
+    def rag(self):
+        """UI-04 colour: red = overdue, amber = due within 7 days, green = on track or closed."""
+        if self.status == self.Status.NOT_VALID:
+            return "grey"
+        if self.is_overdue:
+            return "red"
+        if self.is_due_soon:
+            return "amber"
+        return "green"
 
 
 class Evidence(models.Model):

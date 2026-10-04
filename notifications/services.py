@@ -25,6 +25,10 @@ def notify(recipient, subject, message, nc=None):
     if recipient is None:
         return None
 
+    if nc is not None:
+        # UI-03: every NC email carries a direct link to the NC page.
+        message = f"{message}\n\nOpen {nc.nc_id}: {settings.SITE_URL}{nc.get_absolute_url()}"
+
     notification = Notification.objects.create(
         recipient=recipient, subject=subject, message=message, nc=nc
     )

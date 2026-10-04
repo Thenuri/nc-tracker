@@ -1,0 +1,6 @@
+<span class="badge {{ status_css }}">{{ nc.get_status_display }}</span>
+{% if nc.is_overdue %}
+  <span class="badge {{ rag_css }}">Overdue {{ nc.days_overdue }} day{{ nc.days_overdue|pluralize }}</span>
+{% elif nc.is_due_soon %}
+  <span class="badge {{ rag_css }}">Due {{ nc.target_date|date:"j M" }}</span>
+{% endif %}

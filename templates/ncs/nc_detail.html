@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load nc_tags %}
+
+{% block title %}{{ nc.nc_id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ nc.nc_id }}</h1>
+    <div class="d-flex flex-wrap gap-1">{% nc_badges nc %}</div>
+  </div>
+  <a href="{% url 'ncs:print' nc.nc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank">Printable record</a>
+</div>
+
+<div class="row g-4">
+  {# What you can do – first on phones, right-hand column on desktop #}
+  <div class="col-lg-4 order-lg-2">
+    <h2 class="h5">What you can do</h2>
+    {% for panel, form in panels %}
+      <div class="card shadow-sm mb-3 {% if form.errors %}border-danger{% endif %}">
+        <div class="card-body">
+          <h3 class="h6 card-title">{{ panel.title }}</h3>
+          {% if panel.intro %}<p class="small text-muted">{{ panel.intro }}</p>{% endif %}
+          <form method="post" action="{% url 'ncs:action' nc.nc_id panel.action %}" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% include "includes/form_fields.html" %}
+            <button type="submit" class="btn btn-{{ panel.style }} w-100">{{ panel.button }}</button>
+          </form>
+        </div>
+      </div>
+    {% empty %}
+      <div class="alert alert-light border">
+        Nothing for you to do on this NC right now. You can view it but not change it.
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="col-lg-8 order-lg-1">
+    {# FR-23: make "not effective" comments impossible to miss #}
+    {% if nc.status == "IN_PROGRESS" and nc.verification_outcome == "NOT_EFFECTIVE" %}
+      <div class="alert alert-warning">
+        <strong>Sent back by the NC Manager – not effective.</strong><br>
+        {{ nc.verification_comments|linebreaksbr }}
+      </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">The non-conformity</div>
+      <div class="card-body">
+        <p class="mb-3">{{ nc.description|linebreaksbr }}</p>
+        <dl class="row mb-0 small">
+          <dt class="col-sm-4">Raising department</dt><dd class="col-sm-8">{{ nc.raising_department }}</dd>
+          <dt class="col-sm-4">Receiving department</dt><dd class="col-sm-8">{{ nc.receiving_department }}</dd>
+          <dt class="col-sm-4">Area / process</dt>
+          <dd class="col-sm-8">{{ nc.process }}{% if nc.process_other %} – {{ nc.process_other }}{% endif %}</dd>
+          <dt class="col-sm-4">Source</dt>
+          <dd class="col-sm-8">{{ nc.source }}{% if nc.source_other %} – {{ nc.source_other }}{% endif %}</dd>
+          <dt class="col-sm-4">Date identified</dt><dd class="col-sm-8">{{ nc.date_identified|date:"j M Y" }}</dd>
+          <dt class="col-sm-4">Identified by</dt><dd class="col-sm-8">{{ nc.identified_by }}</dd>
+          {% if nc.severity %}<dt class="col-sm-4">Severity</dt><dd class="col-sm-8">{{ nc.get_severity_display }}</dd>{% endif %}
+          <dt class="col-sm-4">Logged</dt><dd class="col-sm-8">{{ nc.logged_at|date:"j M Y" }} by {{ nc.logged_by }}</dd>
+          {% if nc.validation_deadline %}
+            <dt class="col-sm-4">Validate by</dt><dd class="col-sm-8">{{ nc.validation_deadline|date:"j M Y" }}</dd>
+          {% endif %}
+          {% if nc.attachment %}
+            <dt class="col-sm-4">Attachment</dt>
+            <dd class="col-sm-8"><a href="{% url 'ncs:attachment' nc.nc_id %}">Download</a></dd>
+          {% endif %}
+          <dt class="col-sm-4">Days open</dt><dd class="col-sm-8">{{ nc.days_open }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if nc.validated_by or nc.dispute_reason %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold">Validation</div>
+        <div class="card-body small">
+          {% if nc.dispute_reason %}
+            <p class="mb-2"><strong>Disputed by {{ nc.validated_by }}</strong> on {{ nc.validated_at|date:"j M Y" }}:<br>
+              {{ nc.dispute_reason|linebreaksbr }}</p>
+            {% if nc.dispute_decided_by %}
+              <p class="mb-0"><strong>NC Manager's decision</strong> ({{ nc.dispute_decided_by }}, {{ nc.dispute_decided_at|date:"j M Y" }}):
+                {% if nc.status == "NOT_VALID" %}dispute upheld – not valid.{% else %}dispute overturned – valid.{% endif %}<br>
+                {{ nc.dispute_rationale|linebreaksbr }}</p>
+            {% endif %}
+          {% else %}
+            <p class="mb-0">Confirmed valid by {{ nc.validated_by }} on {{ nc.validated_at|date:"j M Y" }}.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if nc.root_cause or nc.action_owner or nc.target_date %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold">Action plan</div>
+        <div class="card-body small">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Action Owner</dt><dd class="col-sm-8">{{ nc.action_owner|default:"Not assigned yet" }}</dd>
+            <dt class="col-sm-4">Root cause</dt><dd class="col-sm-8">{{ nc.root_cause|default:"—"|linebreaksbr }}</dd>
+            <dt class="col-sm-4">Corrective action</dt><dd class="col-sm-8">{{ nc.corrective_action|default:"—"|linebreaksbr }}</dd>
+            <dt class="col-sm-4">Target date</dt>
+            <dd class="col-sm-8">
+              {{ nc.target_date|date:"j M Y"|default:"—" }}
+              {% if nc.original_target_date and nc.original_target_date != nc.target_date %}
+                <span class="text-muted">(originally {{ nc.original_target_date|date:"j M Y" }})</span>
+              {% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if nc.completion_date or nc.verification_outcome %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold">Completion and verification</div>
+        <div class="card-body small">
+          <dl class="row mb-0">
+            {% if nc.completion_date %}
+              <dt class="col-sm-4">Action completed</dt><dd class="col-sm-8">{{ nc.completion_date|date:"j M Y" }}</dd>
+            {% endif %}
+            {% if nc.verification_outcome %}
+              <dt class="col-sm-4">Verification</dt>
+              <dd class="col-sm-8">{{ nc.get_verification_outcome_display }} – {{ nc.verified_by }}, {{ nc.verified_at|date:"j M Y" }}</dd>
+              {% if nc.verification_comments %}
+                <dt class="col-sm-4">Comments</dt><dd class="col-sm-8">{{ nc.verification_comments|linebreaksbr }}</dd>
+              {% endif %}
+            {% endif %}
+            {% if nc.closed_at %}
+              <dt class="col-sm-4">Closed</dt><dd class="col-sm-8">{{ nc.closed_at|date:"j M Y" }}</dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Evidence</div>
+      <ul class="list-group list-group-flush small">
+        {% for item in evidence %}
+          <li class="list-group-item">
+            {{ item.description }}
+            {% if item.file %}· <a href="{% url 'ncs:evidence_download' item.pk %}">file</a>{% endif %}
+            {% if item.link %}· <a href="{{ item.link }}" target="_blank" rel="noopener">link</a>{% endif %}
+            <div class="text-muted">{{ item.uploaded_by }}, {{ item.uploaded_at|date:"j M Y" }}</div>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No evidence yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% if date_changes %}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header fw-semibold">Target date changes</div>
+        <ul class="list-group list-group-flush small">
+          {% for change in date_changes %}
+            <li class="list-group-item">
+              {{ change.old_date|date:"j M Y" }} → {{ change.new_date|date:"j M Y" }}: {{ change.reason }}
+              <div class="text-muted">{{ change.changed_by }}, {{ change.changed_at|date:"j M Y" }}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-header fw-semibold">Progress notes</div>
+      <ul class="list-group list-group-flush small">
+        {% for note in notes %}
+          <li class="list-group-item">
+            {{ note.text|linebreaksbr }}
+            <div class="text-muted">{{ note.author }}, {{ note.created_at|date:"j M Y H:i" }}</div>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-muted">No notes yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# FR-42: full change history #}
+    <details class="card shadow-sm mb-3">
+      <summary class="card-header fw-semibold">Change history ({{ history|length }})</summary>
+      <ul class="list-group list-group-flush small">
+        {% for record in history %}
+          <li class="list-group-item">
+            <strong>{{ record.history_change_reason|default:record.get_history_type_display }}</strong>
+            – status {{ record.get_status_display }}
+            <div class="text-muted">{{ record.history_user|default:"System" }}, {{ record.history_date|date:"j M Y H:i" }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    </details>
+  </div>
+</div>
+{% endblock %}
