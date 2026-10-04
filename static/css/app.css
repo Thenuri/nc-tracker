@@ -7,8 +7,31 @@
   letter-spacing: 0.03em;
 }
 
-/* Status colours (UI-04), used from Phase 6 onwards:
-   red = overdue, amber = due within 7 days, green = on track or closed */
-.status-overdue  { background-color: #dc3545; color: #fff; }
-.status-due-soon { background-color: #ffc107; color: #212529; }
-.status-on-track { background-color: #198754; color: #fff; }
+/* Register rows: thin left edge in the UI-04 colour
+   (red = overdue, amber = due within 7 days, green = on track or closed) */
+tr.rag-red    > td:first-child { box-shadow: inset 4px 0 0 #dc3545; }
+tr.rag-amber  > td:first-child { box-shadow: inset 4px 0 0 #ffc107; }
+tr.rag-green  > td:first-child { box-shadow: inset 4px 0 0 #198754; }
+tr.rag-grey   > td:first-child { box-shadow: inset 4px 0 0 #adb5bd; }
+
+/* Dashboard stat tiles */
+.stat-tile { color: #212529; border-color: rgba(11, 11, 11, 0.10); }
+a.stat-tile:hover { background-color: #f8f9fa; }
+.stat-tile .stat-label { color: #52514e; }
+.stat-tile .stat-value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+.stat-tile.tile-critical { border-color: #d03b3b; }
+.stat-tile.tile-critical .stat-value,
+.stat-tile.tile-critical .stat-label { color: #d03b3b; }
+
+/* Chart colour tokens (validated with the dataviz palette checker) */
+.viz-root {
+  --series-1: #2a78d6;   /* blue  – NCs / Raised */
+  --series-2: #eb6834;   /* orange – Closed */
+  --viz-grid: #e1e0d9;
+  --viz-muted: #898781;
+  --viz-surface: #ffffff;
+}
+.chart-box { position: relative; width: 100%; }
+
+/* Summary rows on <details> cards look clickable */
+details > summary { cursor: pointer; }

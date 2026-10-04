@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <h1 class="h3 mb-0">Dashboard</h1>
+  <div class="text-muted small">
+    {% if sees_everything %}All departments{% else %}Your department's NCs{% endif %} · as of {% now "j M Y" %}
+  </div>
+</div>
+
+{# FR-33: headline numbers. Each tile opens the matching register view. #}
+{% url 'dashboard:register' as register_url %}
+<div class="row g-2 mb-4">
+  {% for label, value, query, tone in tiles %}
+    <div class="col-6 col-md-4 col-xl-3">
+      <a href="{{ register_url }}?{{ query }}" class="card stat-tile h-100 text-decoration-none {{ tone }}">
+        <div class="card-body py-2">
+          <div class="stat-label small">{{ label }}</div>
+          <div class="stat-value">{{ value }}</div>
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+  <div class="col-6 col-md-4 col-xl-3">
+    <div class="card stat-tile h-100">
+      <div class="card-body py-2">
+        <div class="stat-label small">Average days to close</div>
+        <div class="stat-value">{{ closure.average_days|default:"—" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# FR-34 and FR-35 charts. Each has a table view for screen readers and printing. #}
+<div class="row g-3 viz-root">
+  {% for chart in charts %}
+    <div class="col-12 {% if chart.wide %}col-xl-12{% else %}col-lg-6{% endif %}">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-1">{{ chart.title }}</h2>
+          {% if chart.note %}<div class="small text-muted mb-2">{{ chart.note }}</div>{% endif %}
+          {% if chart.empty %}
+            <p class="text-muted small mb-0">No data yet.</p>
+          {% else %}
+            <div class="chart-box" style="height: {{ chart.height }}px">
+              <canvas id="chart-{{ chart.id }}" role="img" aria-label="{{ chart.title }} chart"></canvas>
+            </div>
+            <details class="mt-2 small">
+              <summary>Show as table</summary>
+              <table class="table table-sm mt-2 mb-0">
+                <thead><tr><th>{{ chart.label_heading }}</th>{% for s in chart.series %}<th class="text-end">{{ s.name }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                  {% for row in chart.rows %}
+                    <tr>{% for cell in row %}<td {% if not forloop.first %}class="text-end"{% endif %}>{{ cell }}</td>{% endfor %}</tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </details>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{{ chart_data|json_script:"chart-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+        integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

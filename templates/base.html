@@ -27,6 +27,10 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">My tasks</a></li>
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard:register' %}">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
+          {% endif %}
           {% if nav.can_log %}
             <li class="nav-item"><a class="nav-link" href="{% url 'ncs:log' %}">Log an NC</a></li>
           {% endif %}

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "core",
     "ncs",
     "notifications",
+    "dashboard",
 ]
 
 MIDDLEWARE = [
