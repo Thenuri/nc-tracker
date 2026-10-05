@@ -4,7 +4,24 @@ Internal web app to record, validate, track and close non-conformities (NCs).
 Requirements are in [docs/SRS.md](docs/SRS.md), project rules in [CLAUDE.md](CLAUDE.md),
 and a click-by-click demo in [docs/DEMO.md](docs/DEMO.md).
 
-## First-time setup (Windows, PowerShell)
+## First-time setup
+
+The `.venv` folder is made for one operating system only, so create it on the
+machine you use (it is git-ignored). Then fill in `.env`.
+
+**macOS (Terminal)**
+
+```bash
+python3 -m venv .venv               # Python 3.12 or newer
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env                # then set SECRET_KEY in .env
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py load_sample_data   # prototype only: fake staff and ~20 NCs
+```
+
+**Windows (PowerShell)**
 
 ```powershell
 py -3.12 -m venv .venv
@@ -18,8 +35,9 @@ python manage.py load_sample_data   # prototype only: fake staff and ~20 NCs
 
 ## Run
 
-```powershell
-.\.venv\Scripts\Activate.ps1
+```bash
+source .venv/bin/activate           # macOS
+.\.venv\Scripts\Activate.ps1        # Windows
 python manage.py runserver
 ```
 
@@ -28,7 +46,7 @@ The admin (lists of departments, processes, sources) is at http://127.0.0.1:8000
 
 ## Tests
 
-```powershell
+```bash
 python manage.py test               # everything
 python manage.py test ncs.test_demo # just the end-to-end demo
 ```
@@ -40,12 +58,16 @@ overdue alerts, escalations and (on Mondays) the weekly digest. Run it once a da
 
 - **Windows Task Scheduler:** create a daily task running
   `C:\path\to\nc-tracker\.venv\Scripts\python.exe C:\path\to\nc-tracker\manage.py send_reminders`
+- **macOS (cron, for testing on a laptop):** run `crontab -e` and add
+  `0 7 * * * cd ~/path/to/nc-tracker && .venv/bin/python manage.py send_reminders`
 - **Linux server (cron):** `0 7 * * * /srv/nc-tracker/.venv/bin/python /srv/nc-tracker/manage.py send_reminders`
 
 ## PDF export
 
 The register's **Export PDF** uses WeasyPrint. On Linux it works after
-`pip install -r requirements.txt` (plus the `pango` system package). On Windows
+`pip install -r requirements.txt` (plus the `pango` system package). On macOS
+run `brew install pango`; on Apple Silicon you may also need
+`export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib` before `runserver`. On Windows
 it also needs the GTK/Pango runtime; without it the app shows a print-ready page
 instead (use the browser's **Print → Save as PDF**). Excel export always works.
 

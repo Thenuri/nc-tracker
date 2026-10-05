@@ -1,0 +1,9 @@
+# Store text files with LF line endings in git, so the repo looks the same on
+# Windows and macOS and files don't show as "modified" just from line endings.
+* text=auto eol=lf
+
+# Binary files: never touch
+*.png binary
+*.jpg binary
+*.ico binary
+*.sqlite3 binary
