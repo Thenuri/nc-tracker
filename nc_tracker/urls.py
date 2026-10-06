@@ -4,6 +4,9 @@ from django.urls import include, path
 admin.site.site_header = "NC Tracker administration"
 admin.site.site_title = "NC Tracker admin"
 admin.site.index_title = "Manage lists"  # heading on the admin home page
+# No left-hand menu: the admin home already lists every section, and the
+# breadcrumbs lead back to it.
+admin.site.enable_nav_sidebar = False
 
 urlpatterns = [
     path("admin/", admin.site.urls),
