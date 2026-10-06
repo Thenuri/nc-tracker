@@ -25,6 +25,11 @@ class ListItemAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def changelist_view(self, request, extra_context=None):
+        # "Departments" instead of Django's "Select department to change"
+        extra_context = {"title": self.model._meta.verbose_name_plural.capitalize(), **(extra_context or {})}
+        return super().changelist_view(request, extra_context)
+
 
 @admin.register(Department)
 class DepartmentAdmin(ListItemAdmin):

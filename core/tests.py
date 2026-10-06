@@ -76,6 +76,16 @@ class ListAdminTests(PermissionTestData):
         finance = next(d for d in page.context["cl"].result_list if d.code == "FIN")
         self.assertEqual((finance.received, finance.open), (1, 1))
 
+    def test_admin_home_shows_a_card_per_list(self):
+        page = self.client.get(reverse("admin:index"))
+        self.assertContains(page, "admin-card", count=None)
+        self.assertContains(page, "APIIT departments, their Head of Department and HoD nominee.")
+        self.assertContains(page, reverse("admin:core_department_add"))
+
+    def test_list_page_title_is_plain(self):
+        page = self.client.get(reverse("admin:core_department_changelist"))
+        self.assertEqual(page.context["title"], "Departments")
+
     def test_lists_can_never_be_deleted(self):
         self.client.force_login(User.objects.create_superuser("root", password="x"))
         url = reverse("admin:core_department_delete", args=[self.finance.pk])
