@@ -21,10 +21,6 @@
           {% endif %}
         </div>
       </div>
-      <div class="d-flex flex-wrap gap-2">
-        {% if can_log %}<a href="{% url 'ncs:log' %}" class="btn btn-primary">+ Log an NC</a>{% endif %}
-        {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="btn btn-outline-primary">Manage lists</a>{% endif %}
-      </div>
     </div>
 
     <div class="card">
@@ -59,7 +55,7 @@
     <div class="container py-5">
       {% include "includes/messages.html" %}
       <div class="welcome-card mx-auto text-center">
-        <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT – Inspire love for learning" class="welcome-logo mb-4">
+        <img src="{% static 'img/apiit-logo.svg' %}" alt="APIIT – Inspire love for learning" class="welcome-logo mb-4">
         <h1 class="h4 fw-semibold mb-1">Non-Conformity Tracker</h1>
         <p class="text-muted small mb-4">Record, validate, track and close NCs across all APIIT departments.</p>
         <hr>

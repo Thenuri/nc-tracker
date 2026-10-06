@@ -62,7 +62,11 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.01em; }
 .form-check-input:checked { background-color: var(--apiit-teal-deep); border-color: var(--apiit-teal-deep); }
 
 /* --- Prototype banner --------------------------------------------------------- */
-.prototype-banner { background: #ffc107; color: #212529; letter-spacing: 0.04em; }
+/* Quiet amber strip: visible, but doesn't shout over the app */
+.prototype-banner {
+  background: #fff6db; color: #7a5300; border-bottom: 1px solid #f3dfa2;
+  font-size: 0.75rem !important; letter-spacing: 0.06em; text-transform: uppercase;
+}
 
 /* --- Navbar: white, thin line underneath, current page underlined like a tab --- */
 .app-navbar {
@@ -71,12 +75,14 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.01em; }
   padding-top: 0;
   padding-bottom: 0;
 }
-.app-navbar > .container { min-height: 64px; }
-.brand-logo { height: 24px; width: auto; }
-.brand-divider { width: 1px; height: 22px; background: var(--apiit-line); }
-.brand-name { font-weight: 600; color: var(--apiit-ink); font-size: 1rem; letter-spacing: -0.005em; }
+.app-navbar > .container { min-height: 60px; }
+.brand-logo { height: 22px; width: auto; }
+.brand-divider { width: 1px; height: 20px; background: var(--apiit-line); }
+/* Title, not a link: bold teal so it doesn't look like one of the tabs next to it */
+.brand-name { font-weight: 700; color: var(--apiit-teal-deep); font-size: 1rem; letter-spacing: -0.01em; }
 .app-navbar .nav-link {
   color: #5b6b6a;
+  font-size: 0.9rem;     /* app-sized text, like Microsoft 365 / GitHub */
   font-weight: 500;
   white-space: nowrap;
 }
@@ -84,7 +90,8 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.01em; }
 .app-navbar .nav-link.active { color: var(--apiit-teal-deep); font-weight: 600; }
 /* Wide screens: links sit on the bottom line; the current page gets a teal underline */
 @media (min-width: 1200px) {
-  .app-navbar .navbar-nav { align-self: stretch; }
+  .app-navbar .navbar-collapse, .app-navbar .navbar-nav { align-self: stretch; }
+  .app-navbar .navbar-nav { margin-left: 2.75rem !important; }   /* clear gap between title and tabs */
   .app-navbar .nav-item { display: flex; }
   .app-navbar .nav-link {
     display: flex; align-items: center; padding: 0 0.9rem !important;
@@ -236,27 +243,49 @@ details > summary { cursor: pointer; }
 .register-toolbar .form-control[type="search"] { flex: 1 1 16rem; width: auto; min-width: 0; }
 
 /* --- Account menu (top right): initials only, details in a dropdown -------------- */
+/* Right side: main action, bell, account */
+.nav-primary-action { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+.nav-icon-button {
+  position: relative; width: 36px; height: 36px; border-radius: 8px;
+  display: inline-grid; place-items: center; color: #5b6b6a;
+}
+.nav-icon-button:hover { background: #f1f6f5; color: var(--apiit-teal-deep); }
+.nav-icon-count {   /* small red count on the bell's top-right corner, not over the bell */
+  position: absolute; top: 1px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px;
+  border-radius: 999px; background: #d01a21; color: #fff; font-size: 0.6rem; font-weight: 700;
+  line-height: 14px; text-align: center; border: 2px solid #fff; box-sizing: content-box;
+}
 .account-button {
   position: relative; display: inline-flex; align-items: center; gap: 6px;
   background: none; border: 0; padding: 3px; border-radius: 999px; color: #6b7a79;
 }
 .account-avatar {
-  width: 38px; height: 38px; border-radius: 50%; display: inline-grid; place-items: center;
-  background: var(--apiit-teal-deep); color: #fff; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.02em;
+  width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: #e3f3f1; color: var(--apiit-teal-deep); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.02em;
 }
 .account-button:hover .account-avatar,
 .account-button[aria-expanded="true"] .account-avatar { box-shadow: 0 0 0 3px rgba(0, 178, 167, 0.25); }
-.account-dot {   /* unread notifications */
-  position: absolute; top: 2px; left: 31px; width: 11px; height: 11px; border-radius: 50%;
-  background: #d01a21; border: 2px solid #fff;
+.account-caret { color: #8a9897; }
+.account-panel {   /* compact, white, small text – like Microsoft 365 / GitHub menus */
+  min-width: 16.5rem; padding: 0; background: #fff; font-size: 0.875rem;
+  border: 1px solid var(--apiit-line); border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(28, 43, 42, 0.14); overflow: hidden;
 }
-.account-caret { font-size: 0.8rem; }
-.account-panel {
-  min-width: 17rem; padding: 0.4rem; border: 1px solid var(--apiit-line); border-radius: 0.9rem;
-  box-shadow: 0 10px 30px rgba(28, 43, 42, 0.12);
+.account-who { display: flex; align-items: center; gap: 0.65rem; padding: 0.85rem 1rem; }
+.account-avatar-sm { width: 32px; height: 32px; flex-shrink: 0; }
+.account-who-text { min-width: 0; }
+.account-name { font-weight: 600; color: var(--apiit-ink); line-height: 1.25; }
+.account-role { font-size: 0.78rem; color: #6b7a79; line-height: 1.3; }
+.account-section { border-top: 1px solid var(--apiit-line); padding: 0.35rem; }
+.account-switcher { padding: 0.65rem 1rem 0.8rem; }
+.account-switcher .switcher-label {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8a9897;
 }
-.account-who { padding: 0.6rem 0.75rem 0.75rem; border-bottom: 1px solid var(--apiit-line); margin-bottom: 0.35rem; }
-.account-switcher { padding: 0.25rem 0.75rem 0.6rem; border-bottom: 1px solid var(--apiit-line); margin-bottom: 0.35rem; }
-.account-switcher .form-select { width: 100%; }
-.account-panel .dropdown-item { border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-weight: 500; }
-.account-panel .dropdown-item:hover { background: rgba(0, 178, 167, 0.1); color: var(--apiit-teal-deep); text-decoration: none; }
+.account-switcher .form-select { width: 100%; font-size: 0.85rem; }
+.account-panel .dropdown-item {
+  display: flex; align-items: center; gap: 0.6rem; border-radius: 0.45rem;
+  padding: 0.45rem 0.65rem; font-size: 0.875rem; font-weight: 400; color: #33433f;
+}
+.account-panel .dropdown-item svg { color: #8a9897; flex-shrink: 0; }
+.account-panel .dropdown-item:hover { background: #f1f6f5; color: var(--apiit-ink); text-decoration: none; }
+.account-panel .dropdown-item:hover svg { color: var(--apiit-teal-deep); }
