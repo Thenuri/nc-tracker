@@ -72,8 +72,8 @@ h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.01em; }
   padding-top: 0.6rem;
   padding-bottom: 0.6rem;
 }
-.brand-logo { height: 34px; width: auto; }
-.brand-divider { width: 1px; height: 28px; background: var(--apiit-line); }
+.brand-logo { height: 26px; width: auto; }
+.brand-divider { width: 1px; height: 24px; background: var(--apiit-line); }
 .brand-name { font-weight: 700; color: var(--apiit-teal-deep); font-size: 1.05rem; }
 .app-navbar .nav-link {
   color: #4a5a59;
@@ -229,3 +229,33 @@ details > summary { cursor: pointer; }
 .badge-your-action { background: #fff4d6; color: #7a5300; border: 1px solid #f0c75e; }
 /* Search box grows, but leaves room for the sort menu and button on the same line */
 .register-toolbar .form-control[type="search"] { flex: 1 1 16rem; width: auto; min-width: 0; }
+
+/* --- Account menu (top right): initials only, details in a dropdown -------------- */
+.account-button {
+  position: relative; display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 0; padding: 3px; border-radius: 999px; color: #6b7a79;
+}
+.account-avatar {
+  width: 38px; height: 38px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--apiit-teal-deep); color: #fff; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.02em;
+}
+.account-button:hover .account-avatar,
+.account-button[aria-expanded="true"] .account-avatar { box-shadow: 0 0 0 3px rgba(0, 178, 167, 0.25); }
+.account-dot {   /* unread notifications */
+  position: absolute; top: 2px; left: 31px; width: 11px; height: 11px; border-radius: 50%;
+  background: #d01a21; border: 2px solid #fff;
+}
+.account-caret { font-size: 0.8rem; }
+.account-panel {
+  min-width: 17rem; padding: 0.4rem; border: 1px solid var(--apiit-line); border-radius: 0.9rem;
+  box-shadow: 0 10px 30px rgba(28, 43, 42, 0.12);
+}
+.account-who { padding: 0.6rem 0.75rem 0.75rem; border-bottom: 1px solid var(--apiit-line); margin-bottom: 0.35rem; }
+.account-switcher { padding: 0.25rem 0.75rem 0.6rem; border-bottom: 1px solid var(--apiit-line); margin-bottom: 0.35rem; }
+.account-switcher .form-select { width: 100% !important; }
+.account-switcher .switcher-label {   /* undo the navbar's "hide label" rule inside the menu */
+  position: static !important; width: auto !important; height: auto !important; clip: auto !important;
+  overflow: visible !important; color: #6b7a79;
+}
+.account-panel .dropdown-item { border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-weight: 500; }
+.account-panel .dropdown-item:hover { background: rgba(0, 178, 167, 0.1); color: var(--apiit-teal-deep); text-decoration: none; }
