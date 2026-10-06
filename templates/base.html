@@ -39,46 +39,65 @@
             <li class="nav-item"><a class="nav-link {% if current == 'core:home' %}active{% endif %}" href="{% url 'core:home' %}">My tasks</a></li>
             <li class="nav-item"><a class="nav-link {% if current == 'dashboard:register' %}active{% endif %}" href="{% url 'dashboard:register' %}">Register</a></li>
             <li class="nav-item"><a class="nav-link {% if current == 'dashboard:dashboard' %}active{% endif %}" href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
-            {% if nav.can_log %}
-              <li class="nav-item"><a class="nav-link {% if current == 'ncs:log' %}active{% endif %}" href="{% url 'ncs:log' %}">Log an NC</a></li>
-            {% endif %}
           </ul>
         {% else %}
           <div class="me-auto"></div>
         {% endif %}
         {% if user.is_authenticated %}
+          <div class="nav-actions d-flex align-items-center gap-2 py-2 py-xl-0">
+          {% if nav.can_log %}
+            {# The NC Manager's main action, shown as a button like "New" in other apps #}
+            <a href="{% url 'ncs:log' %}" class="btn btn-primary btn-sm nav-primary-action">
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Log an NC
+            </a>
+          {% endif %}
+          <a href="{% url 'notifications:list' %}" class="nav-icon-button" title="Notifications"
+             aria-label="Notifications{% if nav.unread %}, {{ nav.unread }} unread{% endif %}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            {% if nav.unread %}<span class="nav-icon-count">{{ nav.unread }}</span>{% endif %}
+          </a>
           {# Account menu: only the initials show; everything personal is inside. #}
-          <div class="dropdown account-menu py-2 py-xl-0 ms-xl-4">
+          <div class="dropdown account-menu">
             <button class="account-button" type="button" data-bs-toggle="dropdown"
                     data-bs-auto-close="outside" aria-expanded="false" aria-label="Account menu">
               <span class="account-avatar">{% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.get_username|slice:":1"|upper }}{% endif %}</span>
-              {% if nav.unread %}<span class="account-dot"><span class="visually-hidden">{{ nav.unread }} unread notifications</span></span>{% endif %}
-              <span class="account-caret" aria-hidden="true">▾</span>
+              <svg class="account-caret" width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div class="dropdown-menu dropdown-menu-end account-panel">
               <div class="account-who">
-                <div class="fw-semibold">{% firstof user.get_full_name user.get_username %}</div>
-                <div class="small text-muted">{{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% if user.department %} · {{ user.department }}{% endif %}</div>
+                <span class="account-avatar account-avatar-sm" aria-hidden="true">{% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.get_username|slice:":1"|upper }}{% endif %}</span>
+                <div class="account-who-text">
+                  <div class="account-name">{% firstof user.get_full_name user.get_username %}</div>
+                  <div class="account-role">{{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% if user.department %} · {{ user.department }}{% endif %}</div>
+                </div>
               </div>
               {% if PROTOTYPE_MODE %}
                 {# PROTOTYPE STAND-IN: disappears when Microsoft login arrives #}
-                <div class="account-switcher">
+                <div class="account-section account-switcher">
                   {% include "includes/role_switcher.html" with switcher_id="whoami" switcher_class="flex-column align-items-stretch" %}
                 </div>
               {% endif %}
-              <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'notifications:list' %}">
-                Notifications
-                {% if nav.unread %}<span class="badge rounded-pill text-bg-danger">{{ nav.unread }}</span>{% endif %}
-              </a>
-              {% if user.is_staff %}
-                <a class="dropdown-item" href="{% url 'admin:index' %}">Manage lists</a>
-              {% endif %}
-              <div class="dropdown-divider"></div>
-              <form method="post" action="{% url 'accounts:logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="dropdown-item">Log out</button>
-              </form>
+              <div class="account-section">
+                {% if user.is_staff %}
+                  <a class="dropdown-item" href="{% url 'admin:index' %}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+                    Manage lists
+                  </a>
+                {% endif %}
+                <form method="post" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Log out
+                  </button>
+                </form>
+              </div>
             </div>
+          </div>
           </div>
         {% endif %}
       </div>
