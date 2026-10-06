@@ -21,7 +21,7 @@
 <body>
   <div class="no-print"><button onclick="window.print()">Print / save as PDF</button></div>
 
-  <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT" style="height: 36px; margin-bottom: 8px">
+  <img src="{% static 'img/apiit-logo.svg' %}" alt="APIIT" style="height: 36px; margin-bottom: 8px">
   <h1>Non-conformity record: {{ nc.nc_id }}</h1>
   <div class="muted">APIIT Sri Lanka · NC Tracker · printed {{ printed_at|date:"j M Y H:i" }} by {{ request.user }}</div>
   {% if PROTOTYPE_MODE %}<p><strong>PROTOTYPE – sample data</strong></p>{% endif %}
