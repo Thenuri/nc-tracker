@@ -25,7 +25,7 @@
   <nav class="navbar navbar-expand-xl app-navbar">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center gap-3" href="{% url 'core:home' %}">
-        <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT" class="brand-logo">
+        <img src="{% static 'img/apiit-logo.svg' %}" alt="APIIT" class="brand-logo">
         <span class="brand-divider" aria-hidden="true"></span>
         <span class="brand-name">NC Tracker</span>
       </a>
@@ -46,24 +46,41 @@
         {% else %}
           <div class="me-auto"></div>
         {% endif %}
-        <div class="d-flex flex-column flex-xl-row align-items-xl-center gap-2 py-2 py-xl-0 ms-xl-4">
-          {# Signed-out visitors pick a person on the welcome card instead #}
-          {% if PROTOTYPE_MODE and user.is_authenticated %}
-            {% include "includes/role_switcher.html" with switcher_id="whoami" %}
-          {% endif %}
-          {% if user.is_authenticated %}
-            <div class="d-flex gap-2">
-              <a href="{% url 'notifications:list' %}" class="btn btn-sm btn-outline-primary text-nowrap">
+        {% if user.is_authenticated %}
+          {# Account menu: only the initials show; everything personal is inside. #}
+          <div class="dropdown account-menu py-2 py-xl-0 ms-xl-4">
+            <button class="account-button" type="button" data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside" aria-expanded="false" aria-label="Account menu">
+              <span class="account-avatar">{% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.get_username|slice:":1"|upper }}{% endif %}</span>
+              {% if nav.unread %}<span class="account-dot"><span class="visually-hidden">{{ nav.unread }} unread notifications</span></span>{% endif %}
+              <span class="account-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end account-panel">
+              <div class="account-who">
+                <div class="fw-semibold">{% firstof user.get_full_name user.get_username %}</div>
+                <div class="small text-muted">{{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% if user.department %} · {{ user.department }}{% endif %}</div>
+              </div>
+              {% if PROTOTYPE_MODE %}
+                {# PROTOTYPE STAND-IN: disappears when Microsoft login arrives #}
+                <div class="account-switcher">
+                  {% include "includes/role_switcher.html" with switcher_id="whoami" switcher_class="flex-column align-items-stretch" %}
+                </div>
+              {% endif %}
+              <a class="dropdown-item d-flex justify-content-between align-items-center" href="{% url 'notifications:list' %}">
                 Notifications
-                {% if nav.unread %}<span class="badge rounded-pill text-bg-danger ms-1">{{ nav.unread }}<span class="visually-hidden"> unread</span></span>{% endif %}
+                {% if nav.unread %}<span class="badge rounded-pill text-bg-danger">{{ nav.unread }}</span>{% endif %}
               </a>
+              {% if user.is_staff %}
+                <a class="dropdown-item" href="{% url 'admin:index' %}">Manage lists</a>
+              {% endif %}
+              <div class="dropdown-divider"></div>
               <form method="post" action="{% url 'accounts:logout' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-link text-nowrap text-secondary">Log out</button>
+                <button type="submit" class="dropdown-item">Log out</button>
               </form>
             </div>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       </div>
     </div>
   </nav>
