@@ -1,5 +1,5 @@
 {% extends "admin/base.html" %}
-{% load static %}
+{% load static admin_urls %}
 {# Admin pages styled like the main app: white header with the APIIT logo and a #}
 {# teal underline, soft section headings, Inter font (see static/css/app.css).   #}
 
@@ -64,7 +64,7 @@
     color: #076d67; background: rgba(0, 178, 167, 0.12); border-radius: 999px; padding: 3px 9px;
   }
   /* Top right: just the initials; click for a small menu (no extra libraries) */
-  #user-tools { margin-left: 20px; text-transform: none; letter-spacing: 0; font-size: 0.875rem; font-weight: 400; }
+  #user-tools { display: flex; align-items: center; gap: 14px; margin-left: 20px; text-transform: none; letter-spacing: 0; font-size: 0.875rem; font-weight: 400; }
   .admin-menu { position: relative; }
   .admin-menu > summary {
     list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
@@ -126,6 +126,99 @@
     font-size: 0.72rem; letter-spacing: 0.03em; }
   #changelist-filter { border-radius: 12px; border: 1px solid #dfe9e8; }
   #changelist-filter h2 { background: #eef5f4; color: #4a5a59; }
+
+  /* ---- Match the app's top bar: thin grey line, smaller logo, soft initials ---- */
+  #header { border-bottom: 1px solid #dfe9e8; box-shadow: none; padding: 0 40px; min-height: 60px; }
+  #site-name a { font-size: 1rem; gap: 12px; }
+  #site-name img { height: 22px; }
+  #site-name .brand-divider { height: 20px; }
+  .admin-avatar { width: 32px; height: 32px; background: #e3f3f1; color: #076d67; font-weight: 600; font-size: 0.75rem; }
+  .admin-menu > summary > span[aria-hidden] { color: #8a9897; font-size: 0.7rem; }
+
+  /* ---- Page: pale background with white cards, like the app ---- */
+  body, #container { background: #f3f7f7; }
+  #main, .main { background: transparent; }
+  div.breadcrumbs { background: transparent; border-bottom: 0; padding: 18px 40px 0; font-size: 0.8rem; }
+  #content { padding: 14px 40px 40px; }
+  #content h1 { font-size: 1.5rem; font-weight: 700; color: #1c2b2a; letter-spacing: -0.01em; margin-bottom: 18px; }
+  .module, #changelist, #changelist .changelist-form-container, .submit-row, #changelist-filter,
+  #content-related { background: #fff; }
+  #changelist { border: 1px solid #dfe9e8; border-radius: 12px; overflow: hidden; }
+  #changelist .module { border: 0; border-radius: 0; }
+  /* Django's own changelist rules are very specific, hence the long selectors */
+  #changelist #toolbar { background: #fff; border-bottom: 1px solid #e3ebea; padding: 12px 14px; }
+  #changelist #toolbar form #searchbar {
+    box-sizing: border-box; height: 36px; padding: 4px 12px; border-radius: 8px; border: 1px solid #d5e2e1;
+    width: 22rem; font-size: 0.9rem;
+  }
+  #changelist #toolbar form input[type="submit"] {
+    height: 36px; padding: 0 16px; background: #076d67; color: #fff; border: 0; border-radius: 8px; font-weight: 500;
+  }
+  #changelist #toolbar form input[type="submit"]:hover { background: #055752; }
+  .object-tools a:link, .object-tools a:visited {
+    border-radius: 8px; text-transform: none; letter-spacing: 0; font-size: 0.85rem; font-weight: 500; padding: 8px 14px;
+  }
+  /* Django draws the "+" as a background image; use a plain "+ " before the text instead */
+  .object-tools a.addlink { background-image: none; padding-right: 14px; }
+  .object-tools a.addlink::before { content: "+ "; }
+  .paginator { background: #fff; color: #6b7a79; }
+  .submit-row { border: 1px solid #dfe9e8; border-radius: 12px; }
+
+  /* ---- Admin home: one card per list ---- */
+  .admin-intro { color: #5b6b6a; margin: -6px 0 22px; font-size: 0.95rem; }
+  .card-section { margin-bottom: 28px; }
+  .card-section-title {
+    background: none !important; padding: 0 !important; margin: 0 0 10px; color: #6b7a79 !important;
+    font-size: 0.72rem !important; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .admin-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+  .admin-card {
+    background: #fff; border: 1px solid #dfe9e8; border-radius: 12px; padding: 18px;
+    display: flex; flex-direction: column; transition: box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .admin-card:hover { border-color: #b9dcd8; box-shadow: 0 6px 20px rgba(7, 109, 103, 0.08); }
+  .admin-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .admin-card-icon {
+    width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+    background: #e3f3f1; color: #076d67;
+  }
+  .admin-card-count { font-size: 1.5rem; font-weight: 700; color: #1c2b2a; }
+  a.admin-card-title { font-size: 1rem; font-weight: 600; color: #1c2b2a; }
+  a.admin-card-title:hover { color: #076d67; text-decoration: none; }
+  .admin-card-text { color: #6b7a79; font-size: 0.85rem; line-height: 1.45; margin: 4px 0 16px; padding: 0; flex-grow: 1; }
+  .admin-card-actions { display: flex; gap: 8px; }
+  a.admin-card-btn {
+    display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 0.82rem; font-weight: 500;
+    border: 1px solid #d5e2e1; color: #33433f; background: #fff;
+  }
+  a.admin-card-btn:hover { border-color: #076d67; color: #076d67; text-decoration: none; }
+  a.admin-card-btn-primary { background: #076d67; border-color: #076d67; color: #fff; }
+  a.admin-card-btn-primary:hover { background: #055752; color: #fff; }
+  .dashboard #content { width: auto; max-width: 1100px; }
+  .dashboard #content-related { display: none; }   /* "Recent actions" box: not needed for lists */
+
+  /* "Back to NC Tracker" button in the header */
+  #header a.admin-back:link, #header a.admin-back:visited {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px;
+    border: 1px solid #d5e2e1; background: #fff; color: #33433f; font-size: 0.85rem; font-weight: 500;
+  }
+  #header a.admin-back:hover { border-color: #076d67; color: #076d67; text-decoration: none; }
+
+  .card-section-title a:link, .card-section-title a:visited { color: #6b7a79; }
+  .card-section-title a:hover { color: #076d67; text-decoration: none; }
+  .admin-recent { background: #fff; border: 1px solid #dfe9e8; border-radius: 12px; padding: 6px 18px; }
+  .admin-recent ul { margin: 0; padding: 0; list-style: none; }
+  .admin-recent li { padding: 10px 0; border-bottom: 1px solid #eef3f2; font-size: 0.9rem; list-style: none; }
+  .admin-recent li:last-child { border-bottom: 0; }
+  .admin-recent-what { display: inline-block; min-width: 4.8rem; color: #6b7a79; font-size: 0.8rem; }
+  .admin-recent-meta { color: #8a9897; font-size: 0.8rem; margin-left: 6px; }
+  .admin-recent-empty { color: #6b7a79; margin: 10px 0; padding: 0; }
+
+  /* "← Manage lists" / "← Departments" above the page title */
+  a.admin-backlink:link, a.admin-backlink:visited {
+    display: inline-block; margin-bottom: 8px; color: #5b6b6a; font-size: 0.875rem; font-weight: 500;
+  }
+  a.admin-backlink:hover { color: #076d67; text-decoration: none; }
 </style>
 {% endblock %}
 
@@ -143,6 +236,12 @@
 {% block welcome-msg %}{% endblock %}
 
 {% block userlinks %}
+  {# Always-visible way back to the main app #}
+  <a class="admin-back" href="{{ site_url }}">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to NC Tracker
+  </a>
   {# Only the initials show; clicking opens this menu. <details> needs no JavaScript. #}
   <details class="admin-menu">
     <summary aria-label="Account menu">
@@ -154,7 +253,6 @@
         <span class="admin-menu-name">{% firstof user.get_full_name user.get_username %}</span>
         <span class="admin-menu-role">{% if user.is_superuser %}Superuser{% else %}{{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% endif %}</span>
       </div>
-      <a class="admin-menu-item" href="{{ site_url }}">← Back to NC Tracker</a>
       {% if user.has_usable_password %}
         <a class="admin-menu-item" href="{% url 'admin:password_change' %}">Change password</a>
       {% endif %}
@@ -178,3 +276,14 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{# A clear "back one step" link above every page title (the index page turns it off) #}
+{% block pretitle %}
+  {% if cl %}
+    <a class="admin-backlink" href="{% url 'admin:index' %}">← Manage lists</a>
+  {% elif opts %}
+    <a class="admin-backlink" href="{% url opts|admin_urlname:'changelist' %}">← {{ opts.verbose_name_plural|capfirst }}</a>
+  {% else %}
+    <a class="admin-backlink" href="{% url 'admin:index' %}">← Manage lists</a>
+  {% endif %}
+{% endblock %}

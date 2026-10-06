@@ -1,0 +1,61 @@
+{% extends "admin/index.html" %}
+{% load i18n admin_cards %}
+{# Admin home as cards: one per list, with what it is for, how many items, and buttons. #}
+
+{# The admin home has nothing to go back to; a section page (same template) goes back home #}
+{% block pretitle %}{% if app_label %}<a class="admin-backlink" href="{% url 'admin:index' %}">← Manage lists</a>{% endif %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <p class="admin-intro">Keep the dropdown lists used in the app up to date. Changes apply straight away.</p>
+  {% for app in app_list %}
+    <section class="card-section">
+      <h2 class="card-section-title"><a href="{{ app.app_url }}">{{ app.name }}</a></h2>
+      <div class="admin-cards">
+        {% for model in app.models %}
+          <div class="admin-card">
+            <div class="admin-card-top">
+              <span class="admin-card-icon">{% card_icon model %}</span>
+              <span class="admin-card-count">{% card_count model %}</span>
+            </div>
+            <a class="admin-card-title" href="{{ model.admin_url }}">{{ model.name }}</a>
+            <p class="admin-card-text">{% card_description model %}</p>
+            <div class="admin-card-actions">
+              {% if model.admin_url %}
+                <a class="admin-card-btn" href="{{ model.admin_url }}">{% if model.view_only %}View{% else %}View &amp; edit{% endif %}</a>
+              {% endif %}
+              {% if model.add_url %}
+                <a class="admin-card-btn admin-card-btn-primary" href="{{ model.add_url }}">+ Add</a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% empty %}
+    <p>{% translate "You don’t have permission to view or edit anything." %}</p>
+  {% endfor %}
+
+  {# What this person recently added or changed here (Django's admin log) #}
+  {% load log %}
+  {% get_admin_log 8 as admin_log for_user user %}
+  <section class="card-section">
+    <h2 class="card-section-title">Your recent changes</h2>
+    <div class="admin-recent">
+      {% if admin_log %}
+        <ul>
+          {% for entry in admin_log %}
+            <li>
+              <span class="admin-recent-what">{% if entry.is_addition %}Added{% elif entry.is_change %}Changed{% else %}Removed{% endif %}</span>
+              {% if entry.is_deletion or not entry.get_admin_url %}{{ entry.object_repr }}{% else %}<a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>{% endif %}
+              <span class="admin-recent-meta">{% if entry.content_type %}{{ entry.content_type.name|capfirst }}{% endif %} · {{ entry.action_time|timesince }} ago</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="admin-recent-empty">Nothing yet. Changes you make to the lists will appear here.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}
