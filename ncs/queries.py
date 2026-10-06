@@ -39,7 +39,9 @@ def my_tasks(user):
     rule = Q(pk__in=[])  # matches nothing; parts are added below
     if perms.is_nc_manager(user):
         rule |= Q(status__in=[S.DISPUTED, S.PENDING_VERIFICATION])
+    # Departments this person heads, or acts for as the HoD's nominee (FR-09)
     headed = list(user.headed_departments.values_list("pk", flat=True))
+    headed += user.nominated_departments.values_list("pk", flat=True)
     if headed:
         rule |= Q(receiving_department__in=headed, status__in=[S.PENDING_VALIDATION, S.VALID])
     rule |= Q(action_owner=user, status=S.IN_PROGRESS)

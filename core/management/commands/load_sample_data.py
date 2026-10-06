@@ -14,7 +14,6 @@ clearly fake. Dates are relative to today so "overdue" always looks right.
 from datetime import datetime, time, timedelta
 
 from django.conf import settings
-from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -63,7 +62,11 @@ USERS = [
     ("owner.exams", "Ruwan", "Example", R.ACTION_OWNER, "EXM", False),
     ("owner.studentservices", "Dilini", "Test", R.ACTION_OWNER, "SSV", False),
     ("owner.it", "Hasith", "Demo", R.ACTION_OWNER, "IT", False),
+    ("nominee.finance", "Priya", "Mock", R.STAFF, "FIN", False),
 ]
+
+# HoD nominees (FR-09): department code -> username
+NOMINEES = {"FIN": "nominee.finance"}
 
 OWNER_FOR = {
     "ACA": "owner.academic", "ADM": "owner.admissions", "FIN": "owner.finance",
@@ -241,7 +244,6 @@ class Command(BaseCommand):
     # --- Users ------------------------------------------------------------------
 
     def load_users(self, departments):
-        manager_group = self.nc_manager_group()
         users = {}
         for username, first, last, role, dept_code, delegate in USERS:
             user, created = User.objects.get_or_create(
@@ -254,29 +256,17 @@ class Command(BaseCommand):
             )
             if created:
                 user.set_unusable_password()  # sample users sign in via the switcher only
-            if role == R.NC_MANAGER:
-                user.is_staff = True  # can open the admin to manage lists (FR-41)
-            user.save()
-            if role == R.NC_MANAGER:
-                user.groups.add(manager_group)
+            user.save()  # NC Managers get admin access here (User.save, FR-41)
             if role == R.HOD:
                 dept = departments[dept_code]
                 dept.hod = user
                 dept.save()
             users[username] = user
+        for dept_code, username in NOMINEES.items():
+            departments[dept_code].nominee = users[username]
+            departments[dept_code].save()
         self.stdout.write(f"Users: {len(users)} sample staff.")
         return users
-
-    def nc_manager_group(self):
-        """Admin rights for the NC Manager: edit the lists, view NC records."""
-        group, _ = Group.objects.get_or_create(name="NC Manager")
-        codenames = [
-            f"{action}_{model}"
-            for model in ("department", "process", "source")
-            for action in ("add", "change", "view")
-        ] + ["view_nc", "view_evidence", "view_progressnote", "view_targetdatechange", "view_notification"]
-        group.permissions.set(Permission.objects.filter(codename__in=codenames))
-        return group
 
     # --- NCs --------------------------------------------------------------------
 

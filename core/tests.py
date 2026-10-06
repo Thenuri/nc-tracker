@@ -5,6 +5,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import User
+from accounts.tests import PermissionTestData
 from ncs.models import NC
 
 from .models import Department
@@ -58,3 +59,29 @@ class SampleDataTests(TestCase):
     def test_refuses_outside_prototype_mode(self):
         call_command("load_sample_data", stdout=StringIO(), stderr=StringIO())
         self.assertEqual(NC.objects.count(), 0)
+
+
+class ListAdminTests(PermissionTestData):
+    """The admin screens the NC Manager uses for the lists (FR-41)."""
+
+    def setUp(self):
+        self.client.force_login(self.manager)
+
+    def test_list_pages_load_with_counts(self):
+        for name in ("department", "process", "source"):
+            with self.subTest(list=name):
+                response = self.client.get(reverse(f"admin:core_{name}_changelist"))
+                self.assertEqual(response.status_code, 200)
+        page = self.client.get(reverse("admin:core_department_changelist"))
+        finance = next(d for d in page.context["cl"].result_list if d.code == "FIN")
+        self.assertEqual((finance.received, finance.open), (1, 1))
+
+    def test_lists_can_never_be_deleted(self):
+        self.client.force_login(User.objects.create_superuser("root", password="x"))
+        url = reverse("admin:core_department_delete", args=[self.finance.pk])
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_nominee_choices_are_only_department_members(self):
+        page = self.client.get(reverse("admin:core_department_change", args=[self.finance.pk]))
+        choices = set(page.context["adminform"].form.fields["nominee"].queryset)
+        self.assertEqual(choices, {self.finance_hod, self.owner, self.finance_staff})

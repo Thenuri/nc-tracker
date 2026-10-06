@@ -88,6 +88,7 @@ TEMPLATES = [
                 # Makes PROTOTYPE_MODE available in every template
                 "core.context_processors.prototype_mode",
                 "core.context_processors.navigation",
+                "core.context_processors.asset_version",
                 # Users for the "Who am I?" switcher (prototype only)
                 "accounts.context_processors.role_switcher",
             ],

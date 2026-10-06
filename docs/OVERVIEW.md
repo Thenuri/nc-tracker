@@ -65,6 +65,8 @@ People only see the buttons for what they are allowed to do. If someone tries a 
 
 The **raising department** can follow its NC but cannot change it.
 
+Each department can also have an optional **HoD nominee** (set by the NC Manager in the admin). The nominee can do everything the receiving HoD can on their department's NCs, and gets the same notifications, so NCs keep moving when the HoD is away (FR-09).
+
 ---
 
 ## 3. The screens

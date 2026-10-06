@@ -3,6 +3,7 @@ from django.urls import include, path
 
 admin.site.site_header = "NC Tracker administration"
 admin.site.site_title = "NC Tracker admin"
+admin.site.index_title = "Manage lists"  # heading on the admin home page
 
 urlpatterns = [
     path("admin/", admin.site.urls),

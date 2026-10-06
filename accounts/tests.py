@@ -97,6 +97,72 @@ class PermissionTests(PermissionTestData):
         self.assertFalse(perms.can_log_nc(self.manager))
 
 
+class NomineeTests(PermissionTestData):
+    """FR-09: the HoD's nominee acts for the HoD on their department's NCs."""
+
+    def setUp(self):
+        self.deputy = User.objects.create_user("fin_deputy", department=self.finance)
+        self.finance.nominee = self.deputy
+        self.finance.save()
+        self.nc = NC.objects.get(pk=self.nc.pk)  # reload with the new nominee
+
+    def test_nominee_has_receiving_hod_rights(self):
+        for check in (perms.can_validate, perms.can_assign_action_owner, perms.can_edit_action_plan):
+            with self.subTest(check=check.__name__):
+                self.assertTrue(check(self.deputy, self.nc))
+
+    def test_nominee_does_not_see_every_department(self):  # FR-30 is for real HoDs
+        self.assertFalse(perms.can_view_all_ncs(self.deputy))
+        self.assertTrue(perms.can_view_nc(self.deputy, self.nc))  # own department
+
+    def test_nominee_of_another_department_has_no_rights(self):
+        self.hr.nominee = self.hr_staff
+        self.hr.save()
+        self.assertFalse(perms.can_validate(self.hr_staff, self.nc))
+
+    def test_nominee_is_shown_as_hod_nominee_not_staff(self):
+        self.assertEqual(self.deputy.role_label, "HoD nominee")
+        self.assertEqual(self.finance_staff.role_label, "Staff")
+        self.assertEqual(self.finance_hod.role_label, "Head of Department")
+
+    @override_settings(PROTOTYPE_MODE=True)
+    def test_switcher_lists_nominee_under_its_own_heading(self):
+        self.client.force_login(self.manager)
+        html = self.client.get(reverse("core:home")).content.decode()
+        self.assertIn('<optgroup label="HoD nominee">', html)
+
+    def test_nominee_must_be_in_department_and_not_the_hod(self):
+        from django.core.exceptions import ValidationError
+        for person in (self.it_staff, self.finance_hod):
+            with self.subTest(person=person.username), self.assertRaises(ValidationError):
+                self.finance.nominee = person
+                self.finance.full_clean()
+
+
+class NCManagerAdminAccessTests(TestCase):
+    """FR-41: anyone given the NC Manager role can manage the lists in the admin."""
+
+    def test_new_nc_manager_can_manage_lists(self):
+        manager = User.objects.create_user("new_manager", role=User.Role.NC_MANAGER)
+        manager = User.objects.get(pk=manager.pk)  # fresh copy: permissions aren't cached
+        self.assertTrue(manager.is_staff)
+        for codename in ("core.change_department", "core.add_process", "core.change_source", "ncs.view_nc"):
+            with self.subTest(permission=codename):
+                self.assertTrue(manager.has_perm(codename))
+        self.assertFalse(manager.has_perm("ncs.change_nc"))  # NCs change via workflow only
+
+    def test_leaving_the_role_removes_list_rights(self):
+        user = User.objects.create_user("ex_manager", role=User.Role.NC_MANAGER)
+        user.role = User.Role.STAFF
+        user.save()
+        self.assertFalse(User.objects.get(pk=user.pk).has_perm("core.change_department"))
+
+    def test_other_roles_get_no_admin_access(self):
+        hod = User.objects.create_user("plain_hod", role=User.Role.HOD)
+        self.assertFalse(hod.is_staff)
+        self.assertFalse(hod.has_perm("core.change_department"))
+
+
 class RoleSwitcherTests(PermissionTestData):
     url = reverse("accounts:switch_user")
 

@@ -10,6 +10,7 @@ def home(request):
     if request.user.is_authenticated:
         context = {
             "headed_departments": list(request.user.headed_departments.all()),
+            "nominated_departments": list(request.user.nominated_departments.all()),
             "tasks": my_tasks(request.user),
             "can_log": perms.can_log_nc(request.user),
         }

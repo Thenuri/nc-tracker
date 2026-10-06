@@ -139,6 +139,23 @@ tr.rag-amber  > td:first-child { box-shadow: inset 4px 0 0 #ffc107; }
 tr.rag-green  > td:first-child { box-shadow: inset 4px 0 0 #198754; }
 tr.rag-grey   > td:first-child { box-shadow: inset 4px 0 0 #adb5bd; }
 
+/* Register cards: same colour edge as the table rows, and the whole card is clickable */
+.nc-card { background: #fff; border-left: 5px solid #198754; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.nc-card.rag-red   { border-left-color: #d01a21; }
+.nc-card.rag-amber { border-left-color: #ffc107; }
+.nc-card.rag-grey  { border-left-color: #adb5bd; }
+.nc-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(7, 109, 103, 0.12) !important; }
+.nc-card .stretched-link:hover { text-decoration: none; }
+.nc-card-desc {   /* show at most 3 lines; the full text is on the NC page */
+  display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.nc-card-facts {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem;
+  border-top: 1px solid var(--apiit-line); padding-top: 0.75rem;
+}
+.nc-card-facts dt { font-weight: 500; color: #6b7a79; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.nc-card-facts dd { margin: 0; font-weight: 600; }
+
 /* --- Badges ---------------------------------------------------------------------- */
 .badge { font-weight: 600; letter-spacing: 0.01em; }
 .badge.text-bg-info { color: #064e4a !important; }
@@ -191,3 +208,24 @@ a.stat-tile:hover { background: rgba(0, 178, 167, 0.05); }
 
 /* Summary rows on <details> cards look clickable */
 details > summary { cursor: pointer; }
+
+/* --- Register: quick filter buttons and "Your action" tag ------------------------ */
+.quick-filter {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.8rem; border-radius: 999px;
+  background: #fff; border: 1px solid var(--apiit-line); color: var(--apiit-ink);
+  font-size: 0.875rem; font-weight: 500;
+}
+.quick-filter:hover { border-color: var(--apiit-teal); text-decoration: none !important; }
+.quick-filter-count {
+  min-width: 1.6rem; padding: 0.05rem 0.45rem; border-radius: 999px; text-align: center;
+  background: #eef5f4; color: #4a5a59; font-size: 0.78rem; font-weight: 600;
+}
+.quick-filter.active { background: var(--apiit-teal-deep); border-color: var(--apiit-teal-deep); color: #fff; }
+.quick-filter.active .quick-filter-count { background: rgba(255, 255, 255, 0.22); color: #fff; }
+.quick-filter-danger { color: #b0151b; }
+.quick-filter-danger .quick-filter-count { background: #fde8e8; color: #b0151b; }
+.quick-filter-danger.active { background: #d01a21; border-color: #d01a21; color: #fff; }
+.badge-your-action { background: #fff4d6; color: #7a5300; border: 1px solid #f0c75e; }
+/* Search box grows, but leaves room for the sort menu and button on the same line */
+.register-toolbar .form-control[type="search"] { flex: 1 1 16rem; width: auto; min-width: 0; }

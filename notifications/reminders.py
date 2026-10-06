@@ -46,13 +46,13 @@ def validation_reminders(today):
     """FR-14: remind the receiving HoD on the last day; alert the NC Manager if missed."""
     sent = 0
     for nc in NC.objects.filter(status=S.PENDING_VALIDATION, validation_deadline__isnull=False) \
-            .select_related("receiving_department__hod"):
-        hod = nc.receiving_department.hod
+            .select_related("receiving_department__hod", "receiving_department__nominee"):
+        heads = nc.receiving_department.heads  # HoD and nominee (FR-09)
         if nc.validation_deadline == today and _once(f"{nc.pk}:validation_due:{nc.validation_deadline}"):
-            sent += _send([hod], f"{nc.nc_id}: please validate today",
+            sent += _send(heads, f"{nc.nc_id}: please validate today",
                           f"Please confirm today whether {nc.nc_id} is valid.\n\n{nc.description}", nc)
         if nc.validation_deadline < today and _once(f"{nc.pk}:validation_missed:{nc.validation_deadline}"):
-            sent += _send([hod] + _managers(), f"{nc.nc_id}: validation deadline missed",
+            sent += _send(heads + _managers(), f"{nc.nc_id}: validation deadline missed",
                           f"{nc.nc_id} was due for validation by {nc.receiving_department} on "
                           f"{nc.validation_deadline:%d %b %Y} and has not been validated.", nc)
     return sent
@@ -65,9 +65,10 @@ def target_reminders(today):
     escalate_after = settings.NC_ESCALATION_DAYS_OVERDUE
 
     for nc in NC.objects.filter(status__in=NC.ACTION_STATUSES, target_date__isnull=False) \
-            .select_related("receiving_department__hod", "action_owner"):
+            .select_related("receiving_department__hod", "receiving_department__nominee", "action_owner"):
         target = nc.target_date
         hod = nc.receiving_department.hod
+        heads = nc.receiving_department.heads
         owner = nc.action_owner or hod  # no owner yet: the HoD is responsible
 
         if today <= target <= soon and _once(f"{nc.pk}:target_soon:{target}"):
@@ -76,7 +77,7 @@ def target_reminders(today):
 
         days_over = (today - target).days
         if days_over >= 1 and _once(f"{nc.pk}:overdue:{target}"):
-            sent += _send([hod, owner], f"{nc.nc_id}: overdue",
+            sent += _send(heads + [owner], f"{nc.nc_id}: overdue",
                           f"{nc.nc_id} passed its target date ({target:%d %b %Y}). "
                           "Please complete it or change the target date with a reason.", nc)
 

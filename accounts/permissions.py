@@ -32,8 +32,14 @@ def is_hod(user):
 
 
 def is_receiving_hod(user, nc):
-    """Head of the department this NC is raised against."""
-    return _active(user) and nc.receiving_department.hod_id == user.pk
+    """Head of the department this NC is raised against, or the HoD's nominee.
+
+    FR-09 lets a nominee act for the HoD, so every "receiving HoD" right below
+    (validate, assign owner, action plan) applies to the nominee too. Seeing
+    ALL NCs (FR-30) stays with real HoDs only: see is_hod().
+    """
+    dept = nc.receiving_department
+    return _active(user) and user.pk in (dept.hod_id, dept.nominee_id)
 
 
 def is_action_owner(user, nc):

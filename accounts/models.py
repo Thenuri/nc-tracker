@@ -35,3 +35,27 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.username
+
+    @property
+    def role_label(self):
+        """The role as shown on screen.
+
+        A department's HoD nominee (FR-09) is shown as "HoD nominee" rather than
+        their stored role (usually "Staff"). Being a nominee is set on the
+        Department, not here, so it can't drift out of step with the rights.
+        """
+        is_nominee = getattr(self, "is_nominee", None)  # pre-filled by list queries
+        if is_nominee is None:
+            is_nominee = self.nominated_departments.exists()
+        return "HoD nominee" if is_nominee else self.get_role_display()
+
+    def save(self, *args, **kwargs):
+        # FR-41: the NC Manager maintains the lists in the admin, so they need
+        # to be able to sign in to it. (Leaving the role does not remove
+        # is_staff, because IT admins may have it for other reasons.)
+        if self.role == self.Role.NC_MANAGER:
+            self.is_staff = True
+        super().save(*args, **kwargs)
+
+        from .admin_access import sync_nc_manager_access  # avoids a circular import
+        sync_nc_manager_access(self)

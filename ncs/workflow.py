@@ -121,12 +121,15 @@ def _notify_nc_managers(subject, message, nc):
         notify(manager, subject, message, nc)
 
 
+def _notify_people(people, subject, message, nc):
+    """Notify each person once, skipping blanks (e.g. a department with no HoD yet)."""
+    for person in dict.fromkeys(p for p in people if p is not None):
+        notify(person, subject, message, nc)
+
+
 def _notify_receiving_side(subject, message, nc):
-    """Receiving HoD plus the Action Owner (if different)."""
-    hod = nc.receiving_department.hod
-    notify(hod, subject, message, nc)
-    if nc.action_owner and nc.action_owner != hod:
-        notify(nc.action_owner, subject, message, nc)
+    """Receiving HoD, their nominee (FR-09) and the Action Owner."""
+    _notify_people(nc.receiving_department.heads + [nc.action_owner], subject, message, nc)
 
 
 # --- Logging (NC Manager) -------------------------------------------------------
@@ -173,15 +176,15 @@ def log_nc(user, nc):
         next_step = f"Please confirm whether it is valid by {nc.validation_deadline:%d %b %Y}."
     else:
         next_step = "Please record the root cause and corrective action."
-    receiving_hod = nc.receiving_department.hod
-    notify(
-        receiving_hod,
+    receiving_heads = nc.receiving_department.heads
+    _notify_people(
+        receiving_heads,
         f"{nc.nc_id}: new NC for {nc.receiving_department}",
         f"An NC has been logged against {nc.receiving_department}.\n\n{nc.description}\n\n{next_step}",
         nc,
     )  # FR-08
     raising_hod = nc.raising_department.hod
-    if raising_hod and raising_hod != receiving_hod:
+    if raising_hod and raising_hod not in receiving_heads:
         notify(
             raising_hod,
             f"{nc.nc_id}: your NC has been logged",
@@ -241,9 +244,8 @@ def decide_dispute(nc, user, uphold, rationale):
     outcome = ("upheld – the NC is recorded as Not Valid" if uphold
                else "overturned – the NC is valid and needs an action plan")
     message = f"The dispute on {nc.nc_id} was {outcome}.\n\nRationale: {nc.dispute_rationale}"
-    notify(nc.receiving_department.hod, f"{nc.nc_id}: dispute decided", message, nc)
-    if nc.raising_department.hod != nc.receiving_department.hod:
-        notify(nc.raising_department.hod, f"{nc.nc_id}: dispute decided", message, nc)
+    _notify_people(nc.receiving_department.heads + [nc.raising_department.hod],
+                   f"{nc.nc_id}: dispute decided", message, nc)
     return nc
 
 
@@ -415,6 +417,13 @@ def reopen(nc, user, reason):
     _require(reason, "Please give a reason for reopening.")
     _move(nc, S.IN_PROGRESS)
     nc.closed_at = None
+    # The old "Effective" verification no longer applies; the action must be
+    # completed and verified again. The old values stay in the history (FR-42).
+    nc.completion_date = None
+    nc.verification_outcome = ""
+    nc.verification_comments = ""
+    nc.verified_by = None
+    nc.verified_at = None
     _save(nc, user, f"Reopened: {reason.strip()}")
     ProgressNote.objects.create(nc=nc, author=user, text=f"Reopened by NC Manager: {reason.strip()}")
     _notify_receiving_side(

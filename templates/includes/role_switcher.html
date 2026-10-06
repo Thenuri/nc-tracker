@@ -6,7 +6,7 @@
   <label for="{{ switcher_id }}" class="switcher-label small text-nowrap mb-0">Who am I?</label>
   <select id="{{ switcher_id }}" name="user_id" class="form-select form-select-sm" onchange="this.form.submit()">
     <option value="">— choose a person —</option>
-    {% regroup switcher_users by get_role_display as role_groups %}
+    {% regroup switcher_users by role_label as role_groups %}
     {% for group in role_groups %}
       <optgroup label="{{ group.grouper }}">
         {% for u in group.list %}

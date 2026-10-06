@@ -2,7 +2,7 @@
 export always contains exactly the rows the person is looking at (FR-36)."""
 
 from django import forms
-from django.db.models import Q
+from django.db.models import Case, F, Q, When
 
 from accounts.models import User
 from core.forms import BootstrapFormMixin, DateInput
@@ -29,6 +29,11 @@ class RegisterFilterForm(BootstrapFormMixin, forms.Form):
                                           queryset=User.objects.filter(ncs_owned__isnull=False).distinct())
     date_from = forms.DateField(label="Identified from", required=False, widget=DateInput())
     date_to = forms.DateField(label="Identified to", required=False, widget=DateInput())
+    sort = forms.ChoiceField(label="Sort", required=False, choices=[
+        ("", "Newest first"),
+        ("oldest", "Oldest first"),
+        ("urgent", "Most urgent first"),
+    ])
 
 
 def apply_filters(queryset, form):
@@ -55,4 +60,20 @@ def apply_filters(queryset, form):
         queryset = queryset.filter(date_identified__gte=data["date_from"])
     if data["date_to"]:
         queryset = queryset.filter(date_identified__lte=data["date_to"])
+
+    if data["sort"] == "oldest":
+        queryset = queryset.order_by("year", "sequence")
+    elif data["sort"] == "urgent":
+        queryset = queryset.annotate(deadline=_current_deadline()).order_by(
+            F("deadline").asc(nulls_last=True), "year", "sequence")
     return queryset
+
+
+def _current_deadline():
+    """The date an NC is working towards right now (same rule as NC.overdue_since):
+    validation deadline while waiting for validation, target date while being
+    fixed, nothing once it is with the NC Manager, closed or not valid."""
+    return Case(
+        When(status=NC.Status.PENDING_VALIDATION, then=F("validation_deadline")),
+        When(status__in=NC.ACTION_STATUSES, then=F("target_date")),
+    )

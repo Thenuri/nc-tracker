@@ -33,6 +33,35 @@ class RegisterTests(DashboardTestBase):
         self.client.force_login(user)
         return self.client.get(self.url, params)
 
+    def test_cards_by_default_table_on_request(self):
+        cards = self.get(self.manager)
+        self.assertEqual(cards.context["view_mode"], "cards")
+        self.assertContains(cards, "nc-card")
+        table = self.get(self.manager, view="table", status="CLOSED")
+        self.assertEqual(table.context["view_mode"], "table")
+        self.assertEqual(self.ids(table), {self.closed.nc_id})  # filters still apply
+        self.assertFalse(self.get(self.manager, view="table").context["filters_used"])
+
+    def test_quick_filter_counts(self):
+        chips = {c["label"]: c for c in self.get(self.manager).context["quick_filters"]}
+        counts = {label: chips[label]["count"] for label in ("All", "Open", "Overdue", "Closed")}
+        self.assertEqual(counts, {"All": 4, "Open": 2, "Overdue": 1, "Closed": 1})
+        self.assertTrue(chips["All"]["active"])
+        # Counts follow the other filters, e.g. receiving department = HR
+        chips = {c["label"]: c for c in self.get(self.manager, receiving_department=self.hr.pk)
+                 .context["quick_filters"]}
+        self.assertEqual((chips["All"]["count"], chips["Open"]["count"]), (2, 0))
+
+    def test_most_urgent_first(self):
+        page = self.get(self.manager, sort="urgent").context["page"]
+        self.assertEqual(page[0], self.overdue)  # its target date has already passed
+
+    def test_your_action_tag(self):
+        # Finance HoD must validate self.nc; the Action Owner is working on self.overdue
+        self.assertEqual(self.get(self.finance_hod).context["my_action_ids"], {self.nc.pk})
+        self.assertEqual(self.get(self.owner).context["my_action_ids"], {self.overdue.pk})
+        self.assertEqual(self.get(self.management).context["my_action_ids"], set())
+
     def test_hod_sees_whole_register(self):  # FR-30
         self.assertEqual(self.get(self.it_hod).context["total"], NC.objects.count())
 

@@ -52,6 +52,7 @@ docs/SRS.md
 
 - **NC Manager** (+ delegate with identical rights): the only role that can log NCs, decide disputes, verify, close and reopen. Manages lists via Django admin.
 - **HoD**: head of a department. Can view ALL NCs read-only (FR-30). Can edit only NCs where their department is the receiving department (FR-40). Validates/disputes and assigns the Action Owner.
+  - **HoD nominee** (optional, `Department.nominee`, FR-09): acts for the HoD on their department's NCs with the same rights and notifications, but does NOT get the institution-wide view.
 - **Action Owner**: staff member assigned to an NC. Enters root cause, corrective action, dates and evidence on their assigned NCs.
 - **Management**: read-only access to everything, including dashboard and exports.
 - Raising department can view NCs it raised but cannot change them.

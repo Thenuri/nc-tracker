@@ -30,6 +30,14 @@ class ReminderTests(WorkflowTestBase):
         self.assertIn(f"{nc.nc_id}: validation deadline missed", self.subjects(self.finance_hod))
         self.assertIn(f"{nc.nc_id}: validation deadline missed", self.subjects(self.manager))
 
+    def test_validation_reminder_also_goes_to_nominee(self):  # FR-09, FR-14
+        deputy = self.finance_staff
+        self.finance.nominee = deputy
+        self.finance.save()
+        nc = self.new_nc(S.PENDING_VALIDATION, validation_deadline=MONDAY)
+        reminders.run_all(MONDAY)
+        self.assertEqual(self.subjects(deputy), [f"{nc.nc_id}: please validate today"])
+
     @override_settings(NC_REMINDER_DAYS_BEFORE_TARGET=7, NC_ESCALATION_DAYS_OVERDUE=14)
     def test_target_date_reminder_overdue_and_escalation(self):  # FR-26, FR-27
         target = MONDAY + timedelta(days=7)

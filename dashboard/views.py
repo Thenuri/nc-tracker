@@ -1,11 +1,13 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 
 from accounts import permissions as perms
-from ncs.queries import visible_ncs
+from ncs.models import NC
+from ncs.queries import my_tasks, visible_ncs
 
 from . import exports
 from .filters import RegisterFilterForm, apply_filters
@@ -17,8 +19,51 @@ PAGE_SIZE = 25
 def filtered_register(request):
     """The NCs this person may see, narrowed by the filters in the URL."""
     form = RegisterFilterForm(request.GET or None)
-    ncs = apply_filters(visible_ncs(request.user), form).order_by("-year", "-sequence")
+    ncs = apply_filters(visible_ncs(request.user).order_by("-year", "-sequence"), form)
     return form, ncs
+
+
+S = NC.Status
+
+# Quick filter buttons above the register: (label, URL parameters, CSS colour)
+QUICK_FILTERS = [
+    ("All", {}, ""),
+    ("Open", {"status": "open"}, ""),
+    ("Overdue", {"overdue": "yes"}, "danger"),
+    ("Pending validation", {"status": S.PENDING_VALIDATION}, ""),
+    ("Disputed", {"status": S.DISPUTED}, ""),
+    ("In progress", {"status": S.IN_PROGRESS}, ""),
+    ("Pending verification", {"status": S.PENDING_VERIFICATION}, ""),
+    ("Closed", {"status": S.CLOSED}, ""),
+]
+
+
+def quick_filters(request):
+    """The quick filter buttons, each with how many NCs it would show.
+
+    Counts respect the person's other filters (department, search, ...) and
+    only replace the status / overdue choice, which is what the buttons set.
+    """
+    others = request.GET.copy()
+    for key in ("status", "overdue", "page"):
+        others.pop(key, None)
+    base = apply_filters(visible_ncs(request.user), RegisterFilterForm(others))
+
+    by_status = dict(base.order_by().values_list("status").annotate(n=Count("pk")))
+    counts = {"All": sum(by_status.values()), "Open": base.open().count(), "Overdue": base.overdue().count()}
+    current = {key: request.GET.get(key, "") for key in ("status", "overdue")}
+
+    buttons = []
+    for label, params, colour in QUICK_FILTERS:
+        count = counts.get(label, by_status.get(params.get("status"), 0))
+        if count == 0 and label not in ("All", "Open", "Overdue"):
+            continue  # hide empty statuses to keep the row short
+        query = others.copy()
+        query.update(params)
+        active = current == {"status": params.get("status", ""), "overdue": params.get("overdue", "")}
+        buttons.append({"label": label, "count": count, "url": "?" + query.urlencode(),
+                        "active": active, "colour": colour})
+    return buttons
 
 
 @login_required
@@ -30,13 +75,26 @@ def register(request):
     # Keep the filters when moving between pages or exporting.
     params = request.GET.copy()
     params.pop("page", None)
+    # Cards are the default; "?view=table" shows the compact table instead.
+    view_mode = "table" if params.get("view") == "table" else "cards"
+    filters_only = params.copy()
+    filters_only.pop("view", None)
     context = {
         "form": form,
         "page": page,
         "total": page.paginator.count,
         "querystring": params.urlencode(),
+        "filter_querystring": filters_only.urlencode(),  # for the Cards / Table switch
+        "view_mode": view_mode,
+        "quick_filters": quick_filters(request),
+        # NCs on this page that are waiting for this person (same rule as "My tasks")
+        "my_action_ids": set(my_tasks(request.user).filter(pk__in=[nc.pk for nc in page])
+                             .values_list("pk", flat=True)),
         "sees_everything": perms.can_view_all_ncs(request.user),
-        "filters_used": any(v for k, v in request.GET.items() if k != "page"),
+        # Opens the "More filters" panel only for filters that are not already
+        # visible above it (search, sort and the quick filter buttons).
+        "filters_used": any(v for k, v in request.GET.items()
+                            if k not in ("page", "view", "q", "sort", "status", "overdue")),
     }
     return render(request, "dashboard/register.html", context)
 

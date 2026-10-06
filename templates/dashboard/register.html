@@ -11,62 +11,138 @@
       {% if sees_everything %}All departments{% else %}NCs for your department{% endif %} · {{ total }} NC{{ total|pluralize }}
     </div>
   </div>
-  {# FR-36: exports contain exactly the filtered rows shown here #}
-  <div class="d-flex gap-2">
+  <div class="d-flex flex-wrap gap-2">
+    {# Cards are easier to scan; the table fits more NCs on screen. Filters are kept either way. #}
+    <div class="btn-group btn-group-sm" role="group" aria-label="Layout">
+      <a class="btn {% if view_mode == 'cards' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+         href="?{{ filter_querystring }}">Cards</a>
+      <a class="btn {% if view_mode == 'table' %}btn-primary{% else %}btn-outline-primary{% endif %}"
+         href="?{{ filter_querystring }}{% if filter_querystring %}&{% endif %}view=table">Table</a>
+    </div>
+    {# FR-36: exports contain exactly the filtered rows shown here #}
     <a class="btn btn-sm btn-outline-success" href="{% url 'dashboard:export_excel' %}?{{ querystring }}">Export Excel</a>
     <a class="btn btn-sm btn-outline-danger" href="{% url 'dashboard:export_pdf' %}?{{ querystring }}">Export PDF</a>
   </div>
 </div>
 
-{# FR-32 filters – plain GET form, so a filtered view can be bookmarked or shared #}
-<details class="card shadow-sm mb-3" {% if filters_used %}open{% endif %}>
-  <summary class="card-header fw-semibold">Filters{% if filters_used %} (on){% endif %}</summary>
-  <div class="card-body">
-    <form method="get" class="row g-2 align-items-end">
-      {% for field in form %}
-        <div class="col-6 col-md-4 col-lg-3">
-          <label class="form-label small mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-        </div>
-      {% endfor %}
-      <div class="col-12 d-flex gap-2">
-        <button type="submit" class="btn btn-primary btn-sm">Apply filters</button>
-        <a href="{% url 'dashboard:register' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
-      </div>
-    </form>
-  </div>
-</details>
+{# FR-32 filters – one plain GET form, so a filtered view can be bookmarked or shared. #}
+<form method="get" class="mb-3">
+  {% if view_mode == "table" %}<input type="hidden" name="view" value="table">{% endif %}
 
-<div class="card shadow-sm">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0 small">
-      <thead class="table-light">
-        <tr>
-          <th>NC ID</th><th>Status</th><th>Description</th><th>Receiving</th><th>Raising</th>
-          <th>Area / process</th><th>Identified</th><th>Target</th><th>Action Owner</th><th class="text-end">Days open</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for nc in page %}
-          <tr class="rag-{{ nc.rag }}">
-            <td class="text-nowrap"><a href="{{ nc.get_absolute_url }}" class="fw-semibold">{{ nc.nc_id }}</a></td>
-            <td>{% nc_badges nc %}</td>
-            <td style="min-width: 16rem">{{ nc.description|truncatechars:90 }}</td>
-            <td>{{ nc.receiving_department }}</td>
-            <td>{{ nc.raising_department }}</td>
-            <td>{{ nc.process }}</td>
-            <td class="text-nowrap">{{ nc.date_identified|date:"j M Y" }}</td>
-            <td class="text-nowrap">{{ nc.target_date|date:"j M Y"|default:"—" }}</td>
-            <td>{{ nc.action_owner|default:"—" }}</td>
-            <td class="text-end">{{ nc.days_open }}</td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="10" class="text-center text-muted py-4">No NCs match these filters.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  {# Search and sort are always visible; the other filters fold away below. #}
+  <div class="register-toolbar d-flex flex-wrap gap-2 mb-2">
+    <input type="search" name="{{ form.q.html_name }}" value="{{ form.q.value|default:'' }}"
+           class="form-control flex-grow-1" placeholder="Search by NC ID or words in the description"
+           aria-label="Search">
+    <select name="{{ form.sort.html_name }}" class="form-select w-auto" aria-label="Sort" onchange="this.form.submit()">
+      {% for value, label in form.sort.field.choices %}
+        <option value="{{ value }}" {% if form.sort.value|default:'' == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
   </div>
-</div>
+
+  {# Quick filters: one click instead of opening the panel. Counts follow the other filters. #}
+  <div class="quick-filters d-flex flex-wrap gap-2 mb-2">
+    {% for chip in quick_filters %}
+      <a href="{{ chip.url }}" class="quick-filter{% if chip.active %} active{% endif %}{% if chip.colour %} quick-filter-{{ chip.colour }}{% endif %}">
+        {{ chip.label }} <span class="quick-filter-count">{{ chip.count }}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <details class="card shadow-sm" {% if filters_used %}open{% endif %}>
+    <summary class="card-header fw-semibold">More filters{% if filters_used %} (on){% endif %}</summary>
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        {% for field in form %}
+          {% if field.name != "q" and field.name != "sort" %}
+            <div class="col-6 col-md-4 col-lg-3">
+              <label class="form-label small mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endif %}
+        {% endfor %}
+        <div class="col-12 d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm">Apply filters</button>
+          <a href="{% url 'dashboard:register' %}{% if view_mode == 'table' %}?view=table{% endif %}" class="btn btn-outline-secondary btn-sm">Clear all</a>
+        </div>
+      </div>
+    </div>
+  </details>
+</form>
+
+{% if view_mode == "cards" %}
+  {# One card per NC; the coloured left edge is the UI-04 colour (red / amber / green). #}
+  <div class="row g-3">
+    {% for nc in page %}
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card nc-card rag-{{ nc.rag }} h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <a href="{{ nc.get_absolute_url }}" class="nc-id fw-bold stretched-link">{{ nc.nc_id }}</a>
+              <span class="text-end">
+                {% if nc.pk in my_action_ids %}<span class="badge badge-your-action">Your action</span>{% endif %}
+                {% nc_badges nc %}
+              </span>
+            </div>
+
+            <p class="nc-card-desc mb-3">{{ nc.description }}</p>
+
+            <div class="nc-card-route small mb-1">
+              <span class="fw-semibold">{{ nc.receiving_department }}</span>
+              {% if nc.raising_department_id != nc.receiving_department_id %}
+                <span class="text-muted">· raised by {{ nc.raising_department }}</span>
+              {% endif %}
+            </div>
+            <div class="small text-muted mb-3">{{ nc.process }}{% if nc.process_other %} – {{ nc.process_other }}{% endif %}</div>
+
+            <dl class="nc-card-facts small mt-auto mb-0">
+              <div><dt>Target</dt><dd>{{ nc.target_date|date:"j M Y"|default:"—" }}</dd></div>
+              <div><dt>Action Owner</dt><dd class="text-truncate">{{ nc.action_owner|default:"—" }}</dd></div>
+              <div><dt>Days open</dt><dd>{{ nc.days_open }}</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="card"><div class="card-body text-center text-muted py-5">No NCs match these filters.</div></div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th>NC ID</th><th>Status</th><th>Description</th><th>Receiving</th><th>Raising</th>
+            <th>Area / process</th><th>Identified</th><th>Target</th><th>Action Owner</th><th class="text-end">Days open</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for nc in page %}
+            <tr class="rag-{{ nc.rag }}">
+              <td class="text-nowrap"><a href="{{ nc.get_absolute_url }}" class="fw-semibold">{{ nc.nc_id }}</a></td>
+              <td>{% if nc.pk in my_action_ids %}<span class="badge badge-your-action">Your action</span> {% endif %}{% nc_badges nc %}</td>
+              <td style="min-width: 16rem">{{ nc.description|truncatechars:90 }}</td>
+              <td>{{ nc.receiving_department }}</td>
+              <td>{{ nc.raising_department }}</td>
+              <td>{{ nc.process }}</td>
+              <td class="text-nowrap">{{ nc.date_identified|date:"j M Y" }}</td>
+              <td class="text-nowrap">{{ nc.target_date|date:"j M Y"|default:"—" }}</td>
+              <td>{{ nc.action_owner|default:"—" }}</td>
+              <td class="text-end">{{ nc.days_open }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="10" class="text-center text-muted py-4">No NCs match these filters.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
 
 {% if page.has_other_pages %}
   <nav class="mt-3" aria-label="Register pages">
@@ -85,6 +161,7 @@
 <p class="small text-muted mt-3">
   <span class="badge text-bg-danger">Overdue</span> deadline passed ·
   <span class="badge text-bg-warning">Due</span> target within 7 days ·
-  no flag = on track or closed
+  no flag = on track or closed ·
+  <span class="badge badge-your-action">Your action</span> waiting for you
 </p>
 {% endblock %}

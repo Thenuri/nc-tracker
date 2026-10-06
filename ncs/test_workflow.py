@@ -317,6 +317,18 @@ class CompletionTests(WorkflowTestBase):
             with self.subTest(user=user.username), self.assertRaises(PermissionDenied):
                 wf.verify(self.new_nc(S.PENDING_VERIFICATION), user, True)
 
+    def test_reopen_clears_old_verification(self):
+        nc = self.new_nc(S.PENDING_VERIFICATION, completion_date=TODAY())
+        Evidence.objects.create(nc=nc, description="Receipt", link="https://example.com", uploaded_by=self.owner)
+        wf.verify(nc, self.manager, True)
+        wf.reopen(nc, self.manager, "Same problem found again.")
+        nc.refresh_from_db()
+        self.assertEqual(nc.verification_outcome, "")
+        self.assertIsNone(nc.verified_by)
+        self.assertIsNone(nc.completion_date)
+        # The earlier "Effective" result is still in the audit trail (FR-42).
+        self.assertIn(NC.Outcome.EFFECTIVE, nc.history.values_list("verification_outcome", flat=True))
+
     def test_reopen_needs_reason_and_is_in_history(self):  # FR-24
         nc = self.new_nc(S.CLOSED)
         with self.assertRaises(wf.WorkflowError):
@@ -361,6 +373,18 @@ class NotifyTests(WorkflowTestBase):
         self.assertEqual(notification.recipient, self.finance_hod)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["fin.hod@example.com"])
+
+    def test_nominee_is_told_about_new_ncs(self):  # FR-08, FR-09
+        deputy = User.objects.create_user("fin_deputy", department=self.finance)
+        self.finance.nominee = deputy
+        self.finance.save()
+        nc = wf.log_nc(self.manager, NC(
+            raising_department=self.it, receiving_department=self.finance,
+            process=self.nc.process, source=self.nc.source, description="Late refund.",
+            date_identified=TODAY(), identified_by="Someone",
+        ))
+        self.assertTrue(self.notified(deputy).filter(subject__contains="new NC").exists())
+        self.assertTrue(self.notified(self.finance_hod).filter(subject__contains="new NC").exists())
 
     def test_notify_without_recipient_does_nothing(self):
         from notifications.services import notify

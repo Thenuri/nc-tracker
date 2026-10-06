@@ -14,8 +14,10 @@
         <div class="text-muted small">
           {% if headed_departments %}
             Head of {{ headed_departments|join:", " }}
+          {% elif nominated_departments %}
+            HoD nominee for {{ nominated_departments|join:", " }}
           {% else %}
-            {{ user.get_role_display }}{% if user.is_delegate %} (delegate){% endif %}{% if user.department %} · {{ user.department }}{% endif %}
+            {{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% if user.department %} · {{ user.department }}{% endif %}
           {% endif %}
         </div>
       </div>

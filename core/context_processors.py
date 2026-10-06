@@ -11,6 +11,19 @@ def prototype_mode(request):
     return {"PROTOTYPE_MODE": settings.PROTOTYPE_MODE}
 
 
+def asset_version(request):
+    """A number that changes whenever static/css/app.css is edited.
+
+    base.html adds it to the stylesheet link ("app.css?v=..."), so browsers
+    load the new styles straight away instead of an old saved copy.
+    """
+    css = settings.BASE_DIR / "static" / "css" / "app.css"
+    try:
+        return {"ASSET_VERSION": int(css.stat().st_mtime)}
+    except OSError:
+        return {"ASSET_VERSION": ""}
+
+
 def navigation(request):
     """Which navbar links to show. Uses the permission helpers, never raw roles."""
     user = getattr(request, "user", None)

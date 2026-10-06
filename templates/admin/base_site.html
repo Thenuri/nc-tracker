@@ -1,0 +1,180 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{# Admin pages styled like the main app: white header with the APIIT logo and a #}
+{# teal underline, soft section headings, Inter font (see static/css/app.css).   #}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{# The main app has no dark mode, so the admin doesn't either: same look everywhere. #}
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="icon" type="image/png" href="{% static 'img/apiit-logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  /* Django admin reads these colour variables; we map them to the APIIT palette. */
+  :root {
+    --primary: #00b2a7;
+    --secondary: #076d67;
+    --accent: #00b2a7;
+    --header-bg: #ffffff;
+    --header-color: #5b6b6a;
+    --header-branding-color: #076d67;
+    --header-link-color: #076d67;
+    --breadcrumbs-bg: #eef5f4;
+    --breadcrumbs-fg: #5b6b6a;
+    --breadcrumbs-link-fg: #076d67;
+    --link-fg: #076d67;
+    --link-hover-color: #055752;
+    --link-selected-fg: #055752;
+    --button-bg: #076d67;
+    --button-hover-bg: #055752;
+    --default-button-bg: #055752;
+    --default-button-hover-bg: #076d67;
+    --object-tools-bg: #076d67;
+    --object-tools-hover-bg: #055752;
+    --selected-row: #e3f6f4;
+    --selected-bg: #e3f6f4;
+    --hairline-color: #e3ebea;
+    --border-color: #d5e2e1;
+    --darkened-bg: #f6f9f9;
+    --message-success-bg: #def5f2;
+    --font-family-primary: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  body { color: #1c2b2a; }
+
+  /* Header: white, logo on the left, teal line underneath (like the app navbar) */
+  #header {
+    border-bottom: 3px solid #00b2a7;
+    box-shadow: 0 2px 12px rgba(7, 109, 103, 0.06);
+    padding: 12px 40px;
+  }
+  #site-name a { display: inline-flex; align-items: center; gap: 14px; font-weight: 700; font-size: 1.15rem; }
+  #site-name img { height: 32px; }
+  #site-name .brand-divider { width: 1px; height: 28px; background: #dfe9e8; }
+  #site-name .admin-pill {
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: #076d67; background: rgba(0, 178, 167, 0.12); border-radius: 999px; padding: 3px 9px;
+  }
+  /* Top right: just the initials; click for a small menu (no extra libraries) */
+  #user-tools { margin-left: 20px; text-transform: none; letter-spacing: 0; font-size: 0.875rem; font-weight: 400; }
+  .admin-menu { position: relative; }
+  .admin-menu > summary {
+    list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px; border-radius: 999px; color: #6b7a79;
+  }
+  .admin-menu > summary::-webkit-details-marker { display: none; }
+  .admin-menu > summary:hover .admin-avatar,
+  .admin-menu[open] > summary .admin-avatar { box-shadow: 0 0 0 3px rgba(0, 178, 167, 0.25); }
+  .admin-menu > summary:focus-visible { outline: 2px solid #00b2a7; outline-offset: 2px; }
+  .admin-avatar {
+    width: 36px; height: 36px; border-radius: 50%; display: inline-grid; place-items: center;
+    background: #076d67; color: #fff; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.02em;
+  }
+  .admin-menu-panel {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 1000; min-width: 230px;
+    background: #fff; border: 1px solid #dfe9e8; border-radius: 12px; text-align: left;
+    box-shadow: 0 10px 30px rgba(28, 43, 42, 0.12); padding: 6px; 
+  }
+  .admin-menu-who { padding: 10px 12px 12px; border-bottom: 1px solid #e3ebea; margin-bottom: 6px; }
+  .admin-menu-name { display: block; color: #1c2b2a; font-weight: 600; }
+  .admin-menu-role { display: block; color: #6b7a79; font-size: 0.8rem; margin-top: 2px; }
+  #user-tools .admin-menu-item, #logout-form button.admin-menu-item {
+    display: block; width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 0;
+    background: none; color: #1c2b2a; font-size: 0.875rem; font-weight: 500; text-align: left;
+    text-transform: none; letter-spacing: 0; line-height: 1.3;
+  }
+  #user-tools .admin-menu-item:hover, #logout-form button.admin-menu-item:hover {
+    background: rgba(0, 178, 167, 0.1); color: #076d67; text-decoration: none;
+  }
+  #header a.admin-menu-item:link, #header a.admin-menu-item:visited { color: #1c2b2a; }
+  #header a.admin-menu-item:hover { color: #076d67; }
+  #logout-form { display: block; border-top: 1px solid #e3ebea; margin-top: 6px; padding-top: 6px; }
+  .theme-toggle { display: none; }
+
+  /* Breadcrumbs: light band instead of a dark one */
+  div.breadcrumbs { border-bottom: 1px solid #dfe9e8; padding: 10px 40px; }
+
+  /* Sections as soft cards with grey-teal headings (like the app's table headers) */
+  .module { border: 1px solid #dfe9e8; border-radius: 12px; overflow: hidden; }
+  #content-related { border: 1px solid #dfe9e8; border-radius: 12px; background: #f6f9f9; }
+  #content-related .module { border: 0; }
+  .module caption, .module h2, .inline-group h2, fieldset.module h2 {
+    background: #eef5f4; color: #4a5a59; font-weight: 600; font-size: 0.78rem;
+    letter-spacing: 0.04em; text-transform: uppercase; padding: 10px 14px;
+  }
+  .module caption a, .module h2 a { color: #4a5a59; }
+  .module caption a:hover { color: #076d67; }
+  fieldset .description { color: #5b6b6a; font-size: 0.85rem; }
+
+  /* Buttons and form controls: rounded, teal focus ring */
+  .button, input[type=submit], input[type=button], .submit-row input, a.button { border-radius: 8px; font-weight: 500; }
+  input[type=text], input[type=search], input[type=email], textarea, select,
+  .vTextField { border-radius: 8px; }
+  input:focus, select:focus, textarea:focus { border-color: #00b2a7; outline: 2px solid rgba(0, 178, 167, 0.25); }
+  .help, .helptext, div.help { color: #6b7a79; }
+
+  /* Changelist: column headings like the app's tables */
+  #changelist table thead th { background: #eef5f4; color: #4a5a59; font-weight: 600; text-transform: uppercase;
+    font-size: 0.72rem; letter-spacing: 0.03em; }
+  #changelist-filter { border-radius: 12px; border: 1px solid #dfe9e8; }
+  #changelist-filter h2 { background: #eef5f4; color: #4a5a59; }
+</style>
+{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}">
+    <img src="{% static 'img/apiit-logo.png' %}" alt="APIIT">
+    <span class="brand-divider" aria-hidden="true"></span>
+    NC Tracker
+    <span class="admin-pill">Admin</span>
+  </a>
+</div>
+{% endblock %}
+
+{% block welcome-msg %}{% endblock %}
+
+{% block userlinks %}
+  {# Only the initials show; clicking opens this menu. <details> needs no JavaScript. #}
+  <details class="admin-menu">
+    <summary aria-label="Account menu">
+      <span class="admin-avatar">{% if user.first_name %}{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}{% else %}{{ user.get_username|slice:":1"|upper }}{% endif %}</span>
+      <span aria-hidden="true">▾</span>
+    </summary>
+    <div class="admin-menu-panel">
+      <div class="admin-menu-who">
+        <span class="admin-menu-name">{% firstof user.get_full_name user.get_username %}</span>
+        <span class="admin-menu-role">{% if user.is_superuser %}Superuser{% else %}{{ user.role_label }}{% if user.is_delegate %} (delegate){% endif %}{% endif %}</span>
+      </div>
+      <a class="admin-menu-item" href="{{ site_url }}">← Back to NC Tracker</a>
+      {% if user.has_usable_password %}
+        <a class="admin-menu-item" href="{% url 'admin:password_change' %}">Change password</a>
+      {% endif %}
+      <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="admin-menu-item">Log out</button>
+      </form>
+    </div>
+  </details>
+  <script>
+    // Close the menu when clicking elsewhere or pressing Esc.
+    document.addEventListener("click", function (event) {
+      var menu = document.querySelector(".admin-menu");
+      if (menu && menu.open && !menu.contains(event.target)) menu.open = false;
+    });
+    document.addEventListener("keydown", function (event) {
+      var menu = document.querySelector(".admin-menu");
+      if (event.key === "Escape" && menu) menu.open = false;
+    });
+  </script>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
