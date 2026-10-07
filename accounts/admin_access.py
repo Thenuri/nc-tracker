@@ -1,9 +1,9 @@
 """Admin access for the NC Manager, who maintains the lists (FR-41, NFR-09).
 
 Anyone with the NC Manager role (including the delegate, NFR-08) is put in the
-"NC Manager" group, which may edit departments, processes and sources and
-view NC records in the admin. Nothing else: NCs still change only through
-ncs/workflow.py.
+"NC Manager" group, which may edit departments, processes, sources and
+public holidays, and view NC records in the admin. Nothing else: NCs still
+change only through ncs/workflow.py.
 
 This used to be set up by load_sample_data only, so real NC Managers had no
 admin access. Now the group is created on every `migrate`, and membership
@@ -18,7 +18,9 @@ PERMISSIONS = [
     f"{action}_{model}"
     for model in ("department", "process", "source")
     for action in ("add", "change", "view")
-] + ["view_nc", "view_evidence", "view_progressnote", "view_targetdatechange", "view_notification"]
+] + [f"{action}_publicholiday" for action in ("add", "change", "view", "delete")] + [
+    "view_nc", "view_evidence", "view_progressnote", "view_targetdatechange", "view_notification",
+]
 
 
 def ensure_nc_manager_group(**kwargs):

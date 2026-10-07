@@ -95,3 +95,25 @@ class ListAdminTests(PermissionTestData):
         page = self.client.get(reverse("admin:core_department_change", args=[self.finance.pk]))
         choices = set(page.context["adminform"].form.fields["nominee"].queryset)
         self.assertEqual(choices, {self.finance_hod, self.owner, self.finance_staff})
+
+
+class HelpPageTests(TestCase):
+    """UI-06: the one-page guide."""
+
+    def test_open_to_everyone(self):
+        response = self.client.get(reverse("core:help"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Found a problem? Tell the NC Manager")
+        self.assertContains(response, "For Heads of Department and nominees")
+        self.assertContains(response, "For Action Owners")
+
+    @override_settings(NC_VALIDATION_WORKING_DAYS=5, NC_REMINDER_DAYS_BEFORE_TARGET=10)
+    def test_numbers_follow_the_settings(self):
+        response = self.client.get(reverse("core:help"))
+        self.assertContains(response, "Within 5 working days")
+        self.assertContains(response, "10 days before the target date")
+
+    def test_lists_the_nc_managers(self):
+        User.objects.create_user("mgr", first_name="Test", last_name="Manager", role=User.Role.NC_MANAGER)
+        self.assertContains(self.client.get(reverse("core:help")), "Test Manager")
+

@@ -59,7 +59,7 @@ Action plan recorded (root cause, action, owner, target date)
 | Verify and close / send back | ✔ | | | | | |
 | Reopen a closed NC | ✔ | | | | | |
 | Dashboard and exports | ✔ | ✔ | ✔ own dept | ✔ | ✔ | ✔ own dept |
-| Manage lists (departments, processes, sources) | ✔ | | | | | |
+| Manage lists (departments, processes, sources, public holidays) | ✔ | | | | | |
 
 People only see the buttons for what they are allowed to do. If someone tries a direct link to an action they may not take, the system refuses it.
 
@@ -87,7 +87,7 @@ All the Part A fields from the SRS on one page:
 
 The system then:
 - gives the NC an ID such as **NC-2026-023** (numbering restarts every year)
-- sets the validation deadline to **3 working days** later
+- sets the validation deadline to **3 working days** later (Mon–Fri, skipping the public holidays the NC Manager has entered)
 - notifies the receiving HoD and the raising department's HoD
 
 ### NC page
@@ -102,8 +102,11 @@ Everything about one NC on one page:
 - a **Printable record** button: the full record from logging to closure, for auditors
 
 ### Register
-The central list of all NCs the person may see.
-- **Filters:** search, status (or "all open"), overdue, receiving department, raising department, area/process, source, Action Owner, and date identified from/to.
+The central list of all NCs the person may see, as **cards** (default) or a compact **table**.
+- **Quick filters** with counts: All, Open, Overdue, and each status, one click each.
+- **Search** box and **sort** (newest, oldest, most urgent first) always visible.
+- **More filters:** receiving department, raising department, area/process, source, Action Owner, and date identified from/to.
+- **"Your action"** tag on NCs waiting for the person looking at the list.
 - **Colour coding:** red = overdue, amber = due within 7 days, green = on track or closed.
 - **Export:** Excel or PDF of exactly what is on screen.
 
@@ -114,7 +117,17 @@ The central list of all NCs the person may see.
 - HoDs and Management see the whole institution. Other staff see their own department.
 
 ### Notifications
-Every message sent to a person, with an unread count in the top bar. Clicking one opens the NC.
+Every message sent to a person. The **bell** in the top bar shows the unread count. Clicking one opens the NC.
+
+### Help
+A one-page guide (the **?** in the top bar, and **Help** in the footer): how to report a problem to the
+NC Manager, step-by-step instructions for HoDs, nominees and Action Owners, and what each status means.
+It can be printed.
+
+### Manage lists (NC Manager)
+Cards for each list: departments (with HoD and nominee), areas/processes, sources and **public holidays**,
+with counts, plus view-only NC records and notifications. Lists are switched off ("Active"), never deleted;
+holidays can be deleted.
 
 ---
 
@@ -170,7 +183,7 @@ These are **settings**, so they can be changed later without any programming.
 
 | Open question in the SRS | What the prototype does now |
 |---|---|
-| Validation deadline | **3 working days** (Mon–Fri; public holidays not yet counted) |
+| Validation deadline | **3 working days** (Mon–Fri, skipping public holidays entered in Manage lists) |
 | Reminder before target date | **7 days** before |
 | Escalation to NC Manager | **14 days** overdue |
 | Same-department NCs | **Still need validation** (can be switched to automatic) |
@@ -223,5 +236,5 @@ All names are fake sample people.
 5. Who should resolve a dispute the NC Manager cannot settle, and should the system record that step?
 6. Is the action plan short enough (root cause, corrective action, owner, target date, plus evidence)?
 7. Are any reports or dashboard figures missing?
-8. Should APIIT public holidays be excluded from the 3-working-day validation deadline?
+8. Public holidays are now skipped in the 3-working-day deadline: who will enter each year's holiday list?
 9. Who will be the named NC Manager and delegate?

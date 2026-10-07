@@ -52,6 +52,12 @@
               Log an NC
             </a>
           {% endif %}
+          <a href="{% url 'core:help' %}" class="nav-icon-button" title="Help" aria-label="Help">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.3-2.4 3.8M12 17h.01"/>
+            </svg>
+          </a>
           <a href="{% url 'notifications:list' %}" class="nav-icon-button" title="Notifications"
              aria-label="Notifications{% if nav.unread %}, {{ nav.unread }} unread{% endif %}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -115,7 +121,7 @@
   <footer class="app-footer mt-auto">
     <div class="container d-flex flex-wrap justify-content-between gap-2 small">
       <span>© {% now "Y" %} APIIT Sri Lanka</span>
-      <span>Non-Conformity Tracker</span>
+      <span>Non-Conformity Tracker · <a href="{% url 'core:help' %}" class="text-white text-decoration-underline">Help</a></span>
     </div>
   </footer>
 

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Help{% endblock %}
+
+{% block content %}
+{# UI-06: one-page guide for HoDs and Action Owners, plus how departments report an NC. #}
+<div class="help-page">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-1">How to use the NC Tracker</h1>
+      <p class="text-muted mb-0">A one-page guide for Heads of Department, nominees and Action Owners.</p>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-secondary d-print-none" onclick="window.print()">Print this guide</button>
+  </div>
+
+  <nav class="help-jump d-print-none mb-4" aria-label="Jump to section">
+    <a href="#report">Report a problem</a>
+    <a href="#hod">For HoDs and nominees</a>
+    <a href="#owner">For Action Owners</a>
+    <a href="#statuses">What the statuses mean</a>
+  </nav>
+
+  {# --- 1. Reporting --------------------------------------------------------- #}
+  <section id="report" class="card help-card mb-4">
+    <div class="card-body">
+      <h2 class="h5">Found a problem? Tell the NC Manager</h2>
+      <p>
+        A <strong>non-conformity (NC)</strong> is anything that doesn't follow a policy, procedure,
+        standard or regulation. You don't need the app to report one: send it to the NC Manager by email,
+        message or in person, and they will record it.
+      </p>
+      <p class="mb-2">Please include:</p>
+      <ol class="help-list">
+        <li><strong>What happened</strong>, and which rule or procedure wasn't followed</li>
+        <li><strong>Which department</strong> should fix it (it can be your own)</li>
+        <li><strong>Which area or process</strong> it affects, e.g. fee collection or examinations</li>
+        <li><strong>When</strong> it was found, and <strong>who</strong> found it</li>
+        <li><strong>How</strong> it was found: daily work, an internal review, monitoring / KPIs or feedback</li>
+        <li>A <strong>photo, record or email</strong> as proof, if you have one</li>
+      </ol>
+      <p class="mb-0 small text-muted">
+        The NC Manager gives it a number such as NC-{% now "Y" %}-001 and sends it to the department that must fix it.
+        Your department is told when it has been logged.
+      </p>
+    </div>
+  </section>
+
+  {# --- 2. HoDs --------------------------------------------------------------- #}
+  <section id="hod" class="card help-card mb-4">
+    <div class="card-body">
+      <h2 class="h5">For Heads of Department and nominees</h2>
+      <ol class="help-steps">
+        <li>
+          <strong>You're told about a new NC</strong> for your department by email and in the app (the bell at the top).
+          Open it from the message or from <em>My tasks</em>.
+        </li>
+        <li>
+          <strong>Within {{ validation_days }} working days, decide if it is valid.</strong>
+          (Working days are Monday to Friday, not counting public holidays.)
+          Click <em>Yes, it is valid</em>, or <em>Mark as not valid</em> and give your reason.
+          If you say it isn't valid, the NC Manager decides and you are told the outcome.
+        </li>
+        <li>
+          <strong>Choose an Action Owner</strong> from your department to fix it (or do it yourself).
+          They are told straight away.
+        </li>
+        <li>
+          <strong>Agree the action plan</strong>: four short items: the <em>root cause</em>,
+          the <em>corrective action</em>, the <em>Action Owner</em> and a <em>target date</em>.
+        </li>
+        <li>
+          <strong>Keep an eye on progress</strong> in <em>My tasks</em>, the <em>Register</em> and the <em>Dashboard</em>.
+        </li>
+      </ol>
+      <div class="help-note">
+        You can <strong>see every NC</strong> across APIIT, but you can only <strong>change</strong> your own department's.
+        Going on leave? Ask the NC Manager to set an <strong>HoD nominee</strong>, who can do all of the above for you.
+      </div>
+    </div>
+  </section>
+
+  {# --- 3. Action Owners ------------------------------------------------------- #}
+  <section id="owner" class="card help-card mb-4">
+    <div class="card-body">
+      <h2 class="h5">For Action Owners</h2>
+      <ol class="help-steps">
+        <li><strong>You're told when you are made Action Owner.</strong> The NC appears in <em>My tasks</em>.</li>
+        <li><strong>Fill in or update the action plan</strong>: root cause, corrective action and target date.</li>
+        <li><strong>Add progress notes</strong> as you go, so everyone can see where things are.</li>
+        <li>
+          <strong>Need more time?</strong> Use <em>Change target date</em> and give a reason.
+          The original date is kept on record.
+        </li>
+        <li>
+          <strong>When the action is done</strong>, add <em>evidence</em> (a file or a link, with a short description),
+          enter the date it was completed and click <em>Send for verification</em>.
+        </li>
+        <li>
+          <strong>The NC Manager checks it.</strong> Either it is <em>closed</em>, or it comes back to you with comments
+          explaining what is still needed. Fix it and send it again.
+        </li>
+      </ol>
+      <div class="help-note">
+        <strong>Reminders:</strong> you get a reminder {{ reminder_days }} days before the target date.
+        If it passes, you and your HoD are told, and after {{ escalation_days }} days overdue the NC Manager is told too.
+      </div>
+    </div>
+  </section>
+
+  {# --- 4. Statuses ------------------------------------------------------------ #}
+  <section id="statuses" class="card help-card mb-4">
+    <div class="card-body">
+      <h2 class="h5">What the statuses mean</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-3">
+          <tbody>
+            <tr><td class="text-nowrap"><span class="badge text-bg-info">Pending validation</span></td><td>Waiting for the HoD to say whether it is valid</td></tr>
+            <tr><td><span class="badge text-bg-warning">Disputed</span></td><td>The HoD says it isn't valid; the NC Manager will decide</td></tr>
+            <tr><td><span class="badge text-bg-primary">Valid</span></td><td>Confirmed; waiting for an action plan</td></tr>
+            <tr><td><span class="badge text-bg-primary">In progress</span></td><td>The corrective action is being carried out</td></tr>
+            <tr><td><span class="badge text-bg-info">Pending verification</span></td><td>Done, with evidence; waiting for the NC Manager to check</td></tr>
+            <tr><td><span class="badge text-bg-success">Closed</span></td><td>Checked and effective. Locked.</td></tr>
+            <tr><td><span class="badge text-bg-secondary">Not valid</span></td><td>The NC Manager agreed it isn't valid. Kept on record, not counted as open.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mb-0 small">
+        <span class="badge text-bg-danger">Overdue</span> a deadline has passed ·
+        <span class="badge text-bg-warning">Due</span> the target date is within {{ due_soon_days }} days ·
+        no flag: on track or closed. NCs are never deleted.
+      </p>
+    </div>
+  </section>
+
+  <p class="text-muted small">
+    <strong>Questions?</strong> Contact the NC Manager{% if nc_managers %}:
+      {% for person in nc_managers %}{{ person }}{% if person.is_delegate %} (delegate){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.
+  </p>
+</div>
+{% endblock %}

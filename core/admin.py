@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 
 from accounts.models import User
 
-from .models import Department, Process, Source
+from .models import Department, Process, PublicHoliday, Source
 
 # Same rule as NC.objects.open(): Closed and Not Valid NCs are not open (FR-15).
 NOT_OPEN = ["CLOSED", "NOT_VALID"]
@@ -97,3 +97,17 @@ class ProcessAdmin(UsedInNCsMixin, ListItemAdmin):
 @admin.register(Source)
 class SourceAdmin(UsedInNCsMixin, ListItemAdmin):
     list_display = ["name", "used_in_ncs", "is_active"]
+
+
+@admin.register(PublicHoliday)
+class PublicHolidayAdmin(admin.ModelAdmin):
+    """Holidays skipped when counting the validation deadline (FR-14)."""
+
+    list_display = ["date", "name"]
+    search_fields = ["name"]
+    date_hierarchy = "date"
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = {"title": "Public holidays", **(extra_context or {})}
+        return super().changelist_view(request, extra_context)
+

@@ -84,3 +84,21 @@ class Source(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PublicHoliday(models.Model):
+    """Days that don't count as working days for deadlines (FR-14).
+
+    The NC Manager enters APIIT's holidays for the year in the admin. Unlike the
+    other lists, a holiday can be deleted: no NC points to it.
+    """
+
+    date = models.DateField(unique=True)
+    name = models.CharField(max_length=100, help_text="e.g. Vesak Full Moon Poya Day")
+
+    class Meta:
+        ordering = ["date"]
+
+    def __str__(self):
+        return f"{self.name} ({self.date:%d %b %Y})"
+

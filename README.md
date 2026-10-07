@@ -41,8 +41,10 @@ source .venv/bin/activate           # macOS
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ and pick a person in **Who am I?** (prototype mode).
-The admin (lists of departments, processes, sources) is at http://127.0.0.1:8000/admin/.
+Open http://127.0.0.1:8000/, click the initials circle (top right) and pick a person in
+**Who am I?** (prototype mode). The **?** icon opens the user guide.
+The NC Manager's **Manage lists** (departments, processes, sources, public holidays) is in the
+same menu, or at http://127.0.0.1:8000/admin/.
 
 ## Tests
 

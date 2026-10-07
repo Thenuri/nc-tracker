@@ -396,3 +396,20 @@ class WorkingDaysTests(PermissionTestData):
         friday = date(2026, 10, 2)
         self.assertEqual(add_working_days(friday, 3), date(2026, 10, 7))  # Wednesday
         self.assertEqual(add_working_days(friday, 1), date(2026, 10, 5))  # Monday
+
+    def test_skips_public_holidays(self):  # FR-14
+        from core.models import PublicHoliday
+        friday = date(2026, 10, 2)
+        PublicHoliday.objects.create(date=date(2026, 10, 5), name="Test holiday")  # the Monday
+        self.assertEqual(add_working_days(friday, 1), date(2026, 10, 6))  # Tuesday instead
+        self.assertEqual(add_working_days(friday, 3), date(2026, 10, 8))  # Thursday instead of Wednesday
+
+    def test_logging_uses_holidays(self):
+        from core.models import PublicHoliday
+        tomorrow = TODAY() + timedelta(days=1)
+        PublicHoliday.objects.create(date=tomorrow, name="Test holiday")
+        nc = wf.log_nc(self.manager, NC(
+            raising_department=self.it, receiving_department=self.finance, process=self.nc.process,
+            source=self.nc.source, description="x", date_identified=TODAY(), identified_by="y",
+        ))
+        self.assertEqual(nc.validation_deadline, add_working_days(TODAY(), 3, holidays={tomorrow}))
