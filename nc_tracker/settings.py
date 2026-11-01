@@ -18,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     PROTOTYPE_MODE=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
@@ -28,6 +29,9 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+# Sites allowed to submit forms over HTTPS, e.g. a VS Code dev tunnel
+# ("https://*.devtunnels.ms"). Without this, every form gives a CSRF error there.
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
 # When True: shows the "PROTOTYPE – sample data" banner and (from Phase 3)
 # enables the "Who am I?" role switcher. Must be False in production.
@@ -49,6 +53,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    # Must come before staticfiles: makes `runserver` use WhiteNoise too, so
+    # static files behave the same with DEBUG on or off.
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     # Third-party
     "simple_history",  # audit trail of every NC change (FR-42)
@@ -62,6 +69,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves /static/ files (CSS, JS, logo) even when DEBUG=False.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -168,9 +177,19 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"  # filled by `collectstatic` on the server
+STATIC_ROOT = BASE_DIR / "staticfiles"  # filled by `collectstatic`; WhiteNoise serves it
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    # Gzip/Brotli-compressed copies for speed. Not the "Manifest" variant: that
+    # breaks pages (and tests) whenever collectstatic hasn't been run yet.
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
+# Uploaded evidence/attachments. Deliberately NOT served by WhiteNoise or a
+# /media/ URL: they're only downloadable through ncs views that check the
+# person may see the NC, so they work the same with DEBUG on or off.
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"  # uploaded evidence/attachments (later phases)
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

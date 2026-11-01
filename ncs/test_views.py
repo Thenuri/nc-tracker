@@ -165,6 +165,20 @@ class ActionViewTests(ViewTestBase):
         self.assertEqual(nc.root_cause, "New cause")
         self.assertNotEqual(nc.target_date.isoformat(), later)  # disabled field ignored
 
+    def test_saved_action_plan_is_shown_as_saved_with_edit_button(self):
+        # Before a plan exists: the normal "Save action plan" form.
+        page = self.as_user(self.finance_hod).get(self.new_nc(S.VALID).get_absolute_url())
+        self.assertContains(page, "Save action plan")
+        self.assertNotContains(page, "Edit action plan")
+
+        # Once saved: a "saved" note, and the form folded behind "Edit action plan".
+        page = self.as_user(self.finance_hod).get(self.new_nc(S.IN_PROGRESS).get_absolute_url())
+        self.assertContains(page, "Action plan saved.")
+        self.assertContains(page, "Edit action plan")
+        self.assertContains(page, "Update action plan")
+        self.assertContains(page, "Change Action Owner")
+        self.assertNotContains(page, "Save action plan")
+
 
 class HomeAndQueryTests(ViewTestBase):
     def test_home_lists_my_tasks(self):

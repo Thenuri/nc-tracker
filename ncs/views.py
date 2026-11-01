@@ -35,6 +35,11 @@ class Panel:
     success: str            # message shown afterwards
     style: str = "primary"  # Bootstrap button colour
     intro: str = ""
+    # For boxes that can be filled in again (e.g. the action plan): once done,
+    # the form is folded away behind an "Edit" button so people can see it was saved.
+    saved: Callable | None = None   # (nc) -> short "already done" text, or "" if not done yet
+    edit_button: str = ""           # opens the folded form
+    update_button: str = ""         # submit button text when editing
 
 
 # Shown in this order, and only those the person can do right now (UI-02).
@@ -53,11 +58,15 @@ PANELS = [
     Panel("save_action_plan", forms.ActionPlanForm, "Action plan", "Save action plan",
           lambda nc, u, d: wf.save_action_plan(nc, u, d["root_cause"], d["corrective_action"],
                                                d["target_date"], action_owner=d.get("action_owner")),
-          "Action plan saved."),
+          "Action plan saved.",
+          saved=lambda nc: "Action plan saved." if nc.root_cause and nc.corrective_action and nc.target_date else "",
+          edit_button="Edit action plan", update_button="Update action plan"),
     Panel("assign_action_owner", forms.AssignOwnerForm, "Assign Action Owner", "Assign",
           lambda nc, u, d: wf.assign_action_owner(nc, u, d["action_owner"]),
           "Action Owner assigned and notified.", style="outline-primary",
-          intro="The Action Owner can then fill in the action plan."),
+          intro="The Action Owner can then fill in the action plan.",
+          saved=lambda nc: f"Assigned to {nc.action_owner}." if nc.action_owner_id else "",
+          edit_button="Change Action Owner", update_button="Assign"),
     Panel("add_evidence", forms.EvidenceForm, "Add evidence", "Add evidence",
           lambda nc, u, d: wf.add_evidence(nc, u, d["description"], file=d.get("file"), link=d.get("link")),
           "Evidence added.", style="outline-primary"),
@@ -103,7 +112,9 @@ def render_detail(request, nc, bound_forms=None):
     for panel in PANELS:
         if wf.can(panel.action, nc, request.user):
             form = bound_forms.get(panel.action) or panel.form_class(nc=nc, user=request.user)
-            panels.append((panel, form))
+            # Keep the form open if it was just submitted with errors.
+            saved_text = panel.saved(nc) if panel.saved and panel.action not in bound_forms else ""
+            panels.append((panel, form, saved_text))
 
     context = {
         "nc": nc,
